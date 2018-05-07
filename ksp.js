@@ -1,16 +1,18 @@
-var Global = {}
-Global.stop = false;
 // Déclaration des fonctions
 
 // Jquery
 $(function() {
-    // submit des valeurs
-    var w;
+
+	// variable des workers
+    var Workers = [];
+    var NbWorkers = 4;
+    var WokerCreated = false;
+
     
     $('#stop').click(function() {
-		w.postMessage({stop:true});
-		w.terminate();
-		w = undefined;
+		for(var i in Workers) {
+			Workers[i].postMessage({channel:"stop"});
+		}
 	}) 
 	
     
@@ -31,19 +33,26 @@ $(function() {
 		rocket.twr = [elems.Tmin.value, elems.Tmax.value];
 		console.log(rocket);
 
-		if(typeof(Worker) !== "undefined") {
-			if(typeof(w) == "undefined") {
+		// create workers
+		if(WokerCreated == false) {
+			var i = 0;
+			while(i < NbWorkers) {
 				w = new Worker("worker.js");
-				w.postMessage({id:1, start:10});
-				console.log('message send to worker');
-				w.onmessage = function(e) {
-					document.getElementById("resultcount" + e.data.id).innerHTML = e.data.result;
-				};
+				Workers.push(w);
+				i++
 			}
-
-		} else {
-			document.getElementById("resultcount").innerHTML = "Sorry! No Web Worker support.";
+			WorkerCreated = true;
+		}		
+		
+		// Run workers
+		for(var i in Workers) {
+			Workers[i].postMessage({channel:"init", id:i, start:10*i});
+			Workers[i].postMessage({channel:"run"});
+			Workers[i].onmessage = function(e) {
+				document.getElementById("resultcount" + e.data.id).innerHTML = e.data.result;
+			}
 		}
+
 
         return false;
     });
