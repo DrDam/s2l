@@ -18,6 +18,7 @@ function run() {
 onmessage = function(e) {
 	if(e.data.channel == 'stop') {
 		clearTimeout(PARAMS.timer);
+                result = null
 		PARAMS.timer = undefined;
 		console.log('woker '+PARAMS.id+' stop');
 		return;

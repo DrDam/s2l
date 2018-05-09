@@ -1,12 +1,12 @@
-// Déclaration des fonctions
-
 // Jquery
 $(function() {
 
-	// variable des workers
-    var Workers = [];
+    // variable des workers
     var NbWorkers = 4;
+    var Workers = [];
     var WokerCreated = false;
+
+    // Déclaration des fonctions
 
     
     $('#stop').click(function() {
