@@ -4,10 +4,12 @@
         <title>Dessine-moi un lanceur</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="ksp.js"></script>
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
 </head>
 <body>
 
@@ -49,18 +51,16 @@
     
 </form>
 
-<div>
-<p>Count numbers: <output id="resultcount0"></output></p>
-<p>Count numbers: <output id="resultcount1"></output></p>
-<p>Count numbers: <output id="resultcount2"></output></p>
-<p>Count numbers: <output id="resultcount3"></output></p>
-</div>
 
-
-
-<table id=results>
-	<thead></thead>
-	<tbody></tbody>
+<table style="display:none" class="table-bordered table-striped table" id=results>
+    <thead>
+        <tr>
+            <td>id</td>
+            <td>value</td>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
 </table>
 
 </body>
