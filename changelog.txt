@@ -1,0 +1,10 @@
+#############
+# Changelog #
+#############
+
+V0.0.1
+- Add worker logic and cleaning
+- Adding changelog + plan
+
+V0.0.0
+- Project intialization
