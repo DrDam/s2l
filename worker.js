@@ -64,6 +64,9 @@ function drawMeARocket(data) {
             return null;
         }
         var stage = giveMeASingleStage(data.engines, data.rocket.dv, data.rocket.twr, data.cu, data.SOI.kerbin);
+        if(stage == null) {
+            return null;
+        }
         output = {
             stages: [stage],
             totalMass: stage.totalMass,
@@ -118,6 +121,11 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             }
         }
     }
+    
+    if(bestMass == null) {
+        return null;
+    }
+    
     return bestStage;
 }
 

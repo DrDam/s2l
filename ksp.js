@@ -29,7 +29,10 @@ $(function () {
             $('#results').show();
             resultTable = $('#results').DataTable({
                 paging: false,
-                searching: false
+                searching: false,
+                "language": {
+                    "emptyTable": "No configuration found from your specifications"
+                }
             });
         }
         resultTable.clear();
