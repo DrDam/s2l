@@ -4,10 +4,14 @@ $(function () {
     //  Workers configuration
     var nbWorkers = 2;
     var workers = [];
+    
+    // Table initialisation
     var resultTable = null;
     var result_id = 0;
+    
+    // Prepare stage templating
     var stageTPL = null;
-    $.get('stages.html.tpl', function(data) {
+    $.get('stages.html.tpl', function (data) {
         stageTPL = data;
     }, 'text');
 
@@ -28,14 +32,14 @@ $(function () {
                 searching: false
             });
         }
-
+        resultTable.clear();
         event.preventDefault();
 
         // Get form values
         var elems = event.currentTarget.elements;
 
         var SOI = {};
-        SOI.kerbin = {Go:9.81};
+        SOI.kerbin = {Go: 9.81};
 
         var CU = {};
         CU.mass = parseFloat(elems.Mu.value);
@@ -85,22 +89,21 @@ $(function () {
 
     // Add a row in table
     function updateDom(data) {
-        
         result_id++;
         var mass = data.output.totalMass + 't';
-        var output = printStages(data.output.stages);
-        resultTable.row.add([result_id, mass, output]).draw();
+        var stages = printStages(data.output.stages);
+        resultTable.row.add([result_id, mass, stages]).draw();
     }
-       
+
     function printStages(stages) {
         var output = '';
-        for(var i in stages) {
+        for (var i in stages) {
             var stage = stages[i];
             stage.stage_id = i;
             var rendered = Mustache.render(stageTPL, stage);
             output += rendered;
         }
-        
+
         return output;
     }
 });

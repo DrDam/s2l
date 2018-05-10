@@ -8,7 +8,7 @@ function autostop() {
     result = null
     timer = undefined;
     stopCalculation = true;
-    console.log('woker '+id+' stop');
+    console.log('woker ' + id + ' stop');
 }
 
 function round(number, precision = 2) {
@@ -17,53 +17,53 @@ function round(number, precision = 2) {
 }
 
 // Communication
-onmessage = function(e) {
-	if(e.data.channel == 'stop') {
-                autostop();
-		return;
-	}
-	
-	if(e.data.channel == 'init') {
-            
-		id = e.data.id;
-		data = e.data.data;
-                //console.log('woker '+id+' initialized');
-		return;
-	}
-	if(e.data.channel == 'run')
-	{
-                stopCalculation = false;
-		console.log('start woker '+id);
-		run();
-	}
-	
+onmessage = function (e) {
+    if (e.data.channel == 'stop') {
+        autostop();
+        return;
+    }
+
+    if (e.data.channel == 'init') {
+        id = e.data.id;
+        data = e.data.data;
+        return;
+    }
+    if (e.data.channel == 'run') {
+        stopCalculation = false;
+        console.log('start woker ' + id);
+        run();
+        return;
+    }
 }
 
 // loop function
 function run() {
-	output = drawMeARocket(data);
-	postMessage({output:output, id:id});
-	
-        if(stopCalculation === false ) {
-            timer = setTimeout(run,100);
-        } else {
-            autostop();
-        }
+    output = drawMeARocket(data);
+    if (output !== null) {
+        postMessage({output: output, id: id});
+    }
+
+    if (stopCalculation === false) {
+        timer = setTimeout(run, 100);
+    } else {
+        autostop();
+    }
 }
 
 // Processing functions
 function drawMeARocket(data) {
-    console.log(data);
-    
+    //console.log(data);
+
     var output = {};
-    
+
     // Case 1 : Generate monobloc rocket for specific Dv
-    if(data.rocket.type == 1) {
-        // Share all engine between all workers
-        var fragment_length = Math.ceil(data.engines.length / data.simu.nbWorker);
-        var start = id * fragment_length;
-        var localengines = data.engines.slice(start, start + fragment_length);
-        var stage = giveMeASingleStage(localengines, data.rocket.dv, data.rocket.twr, data.cu, data.SOI.kerbin);
+    if (data.rocket.type == 1) {
+        // In this case, no need multiple worker
+        if (id != 0) {
+            stopCalculation = true;
+            return null;
+        }
+        var stage = giveMeASingleStage(data.engines, data.rocket.dv, data.rocket.twr, data.cu, data.SOI.kerbin);
         output = {
             stages: [stage],
             totalMass: stage.totalMass,
@@ -72,43 +72,39 @@ function drawMeARocket(data) {
         // Cut calculation in this case
         stopCalculation = true;
     }
-    
-    
 
     return output;
 }
 
 function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
-    
+
     var bestMass = null;
     var bestStage = {};
-    for(var i in availableEngines) {
+    for (var i in availableEngines) {
         var engine = availableEngines[i];
 
         var ISP = engine.ISP.vac;
         var Thrust = engine.Thrust.vac;
         var MassEngineFull = engine.Mass.full;
         var MassEngineDry = engine.Mass.empty;
-        
+
         // calculate Fuel mass for the needed for Dv
         var MstageDry = cu.mass + MassEngineDry;
-        
-        var DvFactor = Math.exp(targetDv / (ISP * SOI.Go) );
+
+        var DvFactor = Math.exp(targetDv / (ISP * SOI.Go));
         var Mcarbu = (DvFactor - 1) * MstageDry;
-        
+
         // Add 1/9 fuel tank mass
-        var MstageFull = cu.mass + MassEngineFull + Mcarbu * 10 /9 ;
-        
+        var MstageFull = cu.mass + MassEngineFull + Mcarbu * 10 / 9;
+
         var TwrFull = Thrust / MstageFull / SOI.Go;
         var TwrDry = Thrust / MstageDry / SOI.Go;
-        
-        if(TwrFull < twr.min) {
+
+        if (TwrFull < twr.min) {
             continue;
         }
-        if(bestMass == null || MstageFull < bestMass) {
-            
-            var burnduration = Mcarbu * ISP * SOI.Go / Thrust;
-            
+        if (bestMass == null || MstageFull < bestMass) {
+            var burnDuration = Mcarbu * ISP * SOI.Go / Thrust;
             bestMass = MstageFull;
             bestStage = {
                 engine: engine.name,
@@ -117,12 +113,12 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
                     min: round(TwrFull),
                     max: round(TwrDry)
                 },
-                totalMass: round(MstageFull,4),
-                burn: round(burnduration,1),
+                totalMass: round(MstageFull, 4),
+                burn: round(burnDuration, 1),
             }
         }
     }
-    return bestStage;  
+    return bestStage;
 }
 
 
