@@ -5,6 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.1.3/mustache.min.js"></script>
     <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="ksp.js"></script>
@@ -17,7 +18,7 @@
     <label>Charge utile</label>
     <ul>
         <li>
-            <label>Masse charge utile (t)</label><input id="Mu" name="Mu" type="text" value="1000"/>
+            <label>Masse charge utile (t)</label><input id="Mu" name="Mu" type="text" value="1"/>
         </li>
        <!-- <li>
             <label>Diamètre coiffe charge utile souhaité</label>
@@ -33,13 +34,16 @@
         </li>
        <!-- <li>
 			    <label><input type=checkbox id=retour value=1 />Carburant supplémentaire pour désorbitation du dernier étage du lanceur</label>
-        </li>
+        </li> -->
         <li>
 			<label>Type de lanceur</label>
             <select id="type" name="type">
-				<option value=1>1 étage</option><option selected value=2>2 étages</option><option value=3>2 étage + booster</option>
+                <option value=1 selected>1 stage monobloc (SSTO rocket)</option>
+                <option value=2>2 stages monobloc (Falcon9 like)</option>
+                <option value=3>3 stages monobloc (Vega like)</option>
+                <option value=4>2 stage monobloc + booster (Ariane5 like)</option>
             </select>
-        </li> -->
+        </li>
         <li>
             <label> TWR </label>
             <label>minimal</label><input id="Tmin" name="Tmin" type="text" value="1.2"/>
@@ -56,7 +60,8 @@
     <thead>
         <tr>
             <td>id</td>
-            <td>value</td>
+            <td>total Mass</td>
+            <td>Detail</td>
         </tr>
     </thead>
     <tbody>

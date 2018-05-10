@@ -2,14 +2,19 @@
 $(function () {
 
     //  Workers configuration
-    var NbWorkers = 4;
-    var Workers = [];
+    var nbWorkers = 2;
+    var workers = [];
     var resultTable = null;
+    var result_id = 0;
+    var stageTPL = null;
+    $.get('stages.html.tpl', function(data) {
+        stageTPL = data;
+    }, 'text');
 
     // Binding Stop button
     $('#stop').click(function () {
-        for (var i in Workers) {
-            Workers[i].postMessage({channel: "stop"});
+        for (var i in workers) {
+            workers[i].postMessage({channel: "stop"});
         }
     });
 
@@ -24,46 +29,54 @@ $(function () {
             });
         }
 
-
         event.preventDefault();
 
         // Get form values
         var elems = event.currentTarget.elements;
 
+        var SOI = {};
+        SOI.kerbin = {Go:9.81};
+
         var CU = {};
-        CU.mass = elems.Mu.value;
+        CU.mass = parseFloat(elems.Mu.value);
         //CU.taille = elems.tailleCU.value;
 
         var rocket = {};
-        rocket.dv = elems.DvCible.value;
-        //rocket.type = elems.type.value;
+        rocket.dv = parseFloat(elems.DvCible.value);
+        rocket.type = elems.type.value;
         //rocket.desorbit = elems.retour.value;
-        rocket.twr = [elems.Tmin.value, elems.Tmax.value];
+        rocket.twr = {
+            min: parseFloat(elems.Tmin.value),
+            max: parseFloat(elems.Tmax.value)
+        };
+
+        var simu = {};
+        simu.nbWorker = nbWorkers;
 
         var data = {
+            SOI: SOI,
             rocket: rocket,
-            cu: CU
+            cu: CU,
+            simu: simu,
+            engines: Engines
         };
 
         // create workers
-        if (Workers.length === 0) {
+        if (workers.length === 0) {
             var i = 0;
-            while (i < NbWorkers) {
+            while (i < nbWorkers) {
                 w = new Worker("worker.js");
-                Workers.push(w);
+                workers.push(w);
                 i++;
             }
         }
 
         // Run workers
-        var fragment_length = Math.ceil(Engines.length / NbWorkers);
-        for (var i in Workers) {
-            var start = i * fragment_length;
-            var localengines = Engines.slice(start, start + fragment_length);
-            data.engines = localengines;
-            Workers[i].postMessage({channel: "init", id: i, data: data});
-            Workers[i].postMessage({channel: "run"});
-            Workers[i].onmessage = function (e) {
+        result_id = 0;
+        for (var i in workers) {
+            workers[i].postMessage({channel: "init", id: i, data: data});
+            workers[i].postMessage({channel: "run"});
+            workers[i].onmessage = function (e) {
                 updateDom(e.data);
             };
         }
@@ -72,7 +85,22 @@ $(function () {
 
     // Add a row in table
     function updateDom(data) {
-        resultTable.row.add([data.id, data.output]).draw();
+        
+        result_id++;
+        var mass = data.output.totalMass + 't';
+        var output = printStages(data.output.stages);
+        resultTable.row.add([result_id, mass, output]).draw();
     }
-
+       
+    function printStages(stages) {
+        var output = '';
+        for(var i in stages) {
+            var stage = stages[i];
+            stage.stage_id = i;
+            var rendered = Mustache.render(stageTPL, stage);
+            output += rendered;
+        }
+        
+        return output;
+    }
 });
