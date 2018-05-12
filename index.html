@@ -43,11 +43,11 @@
         <li>
 			<label>Type de lanceur</label>
             <select id="type" name="type">
-                <option value=1 selected>1 stage monobloc (SSTO rocket)</option>
-          <!--      <option value=2>2 stages monobloc (Falcon9 like)</option>
-                <option value=3>3 stages monobloc (Vega like)</option>
-                <option value=4>2 stage monobloc + booster (Ariane5 like)</option>-->
+                <option value="mono" selected>Monobloc (BlueOrigin / Falcon9 / Vega)</option>
             </select>
+        </li>
+        <li>
+            <label>Nombre d'étage</label><input type='text' id='nbStage' name='nbstage' value='1' disabled/>
         </li>
         <li>
             <label> TWR </label>
@@ -65,7 +65,8 @@
     <thead>
         <tr>
             <td>id</td>
-            <td>total Mass</td>
+            <td>total Mass (t)</td>
+            <td>deltaV (m/s)</td>
             <td>Detail</td>
         </tr>
     </thead>

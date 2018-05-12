@@ -32,10 +32,12 @@ $(function () {
                 searching: false,
                 "language": {
                     "emptyTable": "No configuration found from your specifications"
-                }
+                },
+                "order": [[ 1, "asc" ]]
+                
             });
         }
-        resultTable.clear();
+        resultTable.clear().draw();
         event.preventDefault();
 
         // Get form values
@@ -51,6 +53,7 @@ $(function () {
         var rocket = {};
         rocket.dv = parseFloat(elems.DvCible.value);
         rocket.type = elems.type.value;
+        rocket.stages = parseInt(elems.nbStage.value);
         //rocket.desorbit = elems.retour.value;
         rocket.twr = {
             min: parseFloat(elems.Tmin.value),
@@ -59,6 +62,7 @@ $(function () {
 
         var simu = {};
         simu.nbWorker = nbWorkers;
+        simu.step = 10;
 
         var data = {
             SOI: SOI,
@@ -84,7 +88,8 @@ $(function () {
             workers[i].postMessage({channel: "init", id: i, data: data});
             workers[i].postMessage({channel: "run"});
             workers[i].onmessage = function (e) {
-                updateDom(e.data);
+                console.log(e.data);
+                updateDom(e.data.output);
             };
         }
         return false;
@@ -93,9 +98,10 @@ $(function () {
     // Add a row in table
     function updateDom(data) {
         result_id++;
-        var mass = data.output.totalMass + 't';
-        var stages = printStages(data.output.stages);
-        resultTable.row.add([result_id, mass, stages]).draw();
+        var mass = data.totalMass;
+        var dv = "xxx";
+        var stages = printStages(data.stages);
+        resultTable.row.add([result_id, mass, dv, stages]).draw();
     }
 
     function printStages(stages) {

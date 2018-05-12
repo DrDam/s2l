@@ -38,16 +38,7 @@ onmessage = function (e) {
 
 // loop function
 function run() {
-    output = drawMeARocket(data);
-    if (output !== null) {
-        postMessage({output: output, id: id});
-    }
-
-    if (stopCalculation === false) {
-        timer = setTimeout(run, 100);
-    } else {
-        autostop();
-    }
+    drawMeARocket(data);
 }
 
 // Processing functions
@@ -57,23 +48,13 @@ function drawMeARocket(data) {
     var output = {};
 
     // Case 1 : Generate monobloc rocket for specific Dv
-    if (data.rocket.type == 1) {
+    if (data.rocket.type == 'mono' && data.rocket.stages == 1) {
         // In this case, no need multiple worker
         if (id != 0) {
             stopCalculation = true;
             return null;
         }
-        var stage = giveMeASingleStage(data.engines, data.rocket.dv, data.rocket.twr, data.cu, data.SOI.kerbin);
-        if(stage == null) {
-            return null;
-        }
-        output = {
-            stages: [stage],
-            totalMass: stage.totalMass,
-            burn: stage.burn,
-        }
-        // Cut calculation in this case
-        stopCalculation = true;
+        giveMeASingleStage(data.engines, data.rocket.dv, data.rocket.twr, data.cu, data.SOI.kerbin);
     }
 
     return output;
@@ -81,8 +62,6 @@ function drawMeARocket(data) {
 
 function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
 
-    var bestMass = null;
-    var bestStage = {};
     for (var i in availableEngines) {
         var engine = availableEngines[i];
 
@@ -103,30 +82,28 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         var TwrFull = Thrust / MstageFull / SOI.Go;
         var TwrDry = Thrust / MstageDry / SOI.Go;
 
-        if (TwrFull < twr.min) {
+        if (TwrFull < twr.min || TwrFull > twr.max) {
             continue;
         }
-        if (bestMass == null || MstageFull < bestMass) {
-            var burnDuration = Mcarbu * ISP * SOI.Go / Thrust;
-            bestMass = MstageFull;
-            bestStage = {
-                engine: engine.name,
-                mcarbu: round(Mcarbu),
-                twr: {
-                    min: round(TwrFull),
-                    max: round(TwrDry)
-                },
-                totalMass: round(MstageFull, 4),
-                burn: round(burnDuration, 1),
-            }
+        var burnDuration = Mcarbu * ISP * SOI.Go / Thrust;
+        var stage = {
+            engine: engine.name,
+            mcarbu: round(Mcarbu),
+            twr: {
+                min: round(TwrFull),
+                max: round(TwrDry)
+            },
+            totalMass: round(MstageFull, 4),
+            burn: round(burnDuration, 1),
         }
+        var output = {
+            stages: [stage],
+            totalMass: stage.totalMass,
+            burn: stage.burn,
+            dv: targetDv,
+        }
+        postMessage({output: output, id: id});
     }
-    
-    if(bestMass == null) {
-        return null;
-    }
-    
-    return bestStage;
 }
 
 
