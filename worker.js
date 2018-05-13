@@ -31,27 +31,13 @@ onmessage = function (e) {
     if (e.data.channel == 'run') {
         stopCalculation = false;
         console.log('start woker ' + id);
-        run();
+        drawMeARocket();
         return;
     }
 }
 
-// loop function
-function run() {
-    output = drawMeARocket(data);
-    if (output !== null) {
-        postMessage({output: output, id: id});
-    }
-    
-    if (stopCalculation === false) {
-        timer = setTimeout(run, 100);
-    } else {
-        autostop();
-    }
-}
-
 // Processing functions
-function drawMeARocket(data) {
+function drawMeARocket() {
     //console.log(data);
 
     var output = {};
@@ -59,11 +45,12 @@ function drawMeARocket(data) {
     // Case 1 : Generate monobloc rocket for specific Dv
     if (data.rocket.type == 'mono' && data.rocket.stages == 1) {
         // In this case, no need multiple worker
-        if (id != 0) {
-            stopCalculation = true;
-            return null;
-        }
-        giveMeASingleStage(data.engines, data.rocket.dv, data.rocket.twr, data.cu, data.SOI.kerbin);
+    var fragment_length = Math.ceil(data.engines.length / data.simu.nbWorker);
+    var start = worker_id * fragment_length;
+    var localengines = data.engines.slice(start, start + fragment_length);
+
+    giveMeASingleStage(localengines, data.rocket.dv, data.rocket.twr, data.cu, data.SOI.kerbin);
+
     }
 
     return output;
