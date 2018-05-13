@@ -90,6 +90,9 @@ $(function () {
 
     // Add a row in table
     function updateDom(data) {
+       // console.log('###################');
+      //  console.log(data);
+       // console.log('###################');
         result_id++;
         var mass = data.totalMass;
         var dv = "xxx";
