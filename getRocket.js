@@ -83,7 +83,7 @@ function makeMultipleStageRocket(localData) {
                     globalWorkers[result.id].terminate();
                     globalWorkersStatus[result.id] = 0;
                     if (Object.values(globalWorkersStatus).join('') == 0) {
-                        killMe();
+                        //killMe();
                     }
                 }
                 if (result.channel == 'result') {
@@ -107,7 +107,7 @@ function makeMultipleStageRocket(localData) {
                                 globalWorkers[result.id].terminate();
                                 globalWorkersStatus[result.id] = 0;
                                 if (Object.values(globalWorkersStatus).join('') == 0) {
-                                    killMe();
+                                    //killMe();
                                 }
                             }
                             if (result.channel == 'result') {
