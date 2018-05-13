@@ -3,7 +3,7 @@ $(function () {
 
     //  Workers configuration
     var nbWorkers = 2;
-    var workers = [];
+    var master;
     
     // Table initialisation
     var resultTable = null;
@@ -17,9 +17,7 @@ $(function () {
 
     // Binding Stop button
     $('#stop').click(function () {
-        for (var i in workers) {
-            workers[i].postMessage({channel: "stop"});
-        }
+        master.postMessage({channel: "stop"});
     });
 
     // Binding start Button
@@ -72,26 +70,21 @@ $(function () {
             engines: Engines
         };
 
-        // create workers
-        if (workers.length === 0) {
-            var i = 0;
-            while (i < nbWorkers) {
-                w = new Worker("worker.js");
-                workers.push(w);
-                i++;
-            }
-        }
-
-        // Run workers
+        // Run Calculation
         result_id = 0;
-        for (var i in workers) {
-            workers[i].postMessage({channel: "init", id: i, data: data});
-            workers[i].postMessage({channel: "run"});
-            workers[i].onmessage = function (e) {
-                console.log(e.data);
+        master = new Worker('getRocket.js');
+        master.postMessage({channel: "init", id: "master", data: data});
+        master.postMessage({channel: "run"});
+        master.onmessage = function (e) {
+            var result = e.data;
+            if(result.channel == 'result') {
                 updateDom(e.data.output);
-            };
-        }
+            }
+            if(result.channel == 'end') {
+                master.terminate();
+                master = null;
+            }
+        };
         return false;
     });
 

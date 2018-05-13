@@ -1,14 +1,11 @@
-var id;
+// Generate 1 stage Rocket
+var worker_id;
+var fragment_id;
 var data = {}
-var timer;
-var stopCalculation = false;
 
 function autostop() {
-    clearTimeout(timer);
-    result = null
-    timer = undefined;
-    stopCalculation = true;
-    console.log('woker ' + id + ' stop');
+    console.log('woker ' + worker_id + ' stop');
+    postMessage({channel: 'end', id: worker_id});
 }
 
 function round(number, precision = 2) {
@@ -24,13 +21,13 @@ onmessage = function (e) {
     }
 
     if (e.data.channel == 'init') {
-        id = e.data.id;
+        worker_id = e.data.id;
         data = e.data.data;
+        fragment_id = e.data.fragment_id;
         return;
     }
     if (e.data.channel == 'run') {
-        stopCalculation = false;
-        console.log('start woker ' + id);
+        console.log('start woker ' + worker_id);
         drawMeARocket();
         return;
     }
@@ -38,25 +35,15 @@ onmessage = function (e) {
 
 // Processing functions
 function drawMeARocket() {
-    //console.log(data);
-
-    var output = {};
-
-    // Case 1 : Generate monobloc rocket for specific Dv
-    if (data.rocket.type == 'mono' && data.rocket.stages == 1) {
-        // In this case, no need multiple worker
     var fragment_length = Math.ceil(data.engines.length / data.simu.nbWorker);
-    var start = worker_id * fragment_length;
+    var start = fragment_id * fragment_length;
     var localengines = data.engines.slice(start, start + fragment_length);
 
     giveMeASingleStage(localengines, data.rocket.dv, data.rocket.twr, data.cu, data.SOI.kerbin);
-
-    }
-
-    return output;
+    autostop();
 }
 
-function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI,) {
+function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
 
     for (var i in availableEngines) {
         var engine = availableEngines[i];
@@ -98,7 +85,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI,) {
             burn: stage.burn,
             dv: targetDv,
         }
-        postMessage({output: output, id: id});
+        //console.log('result from ' + worker_id);
+        postMessage({channel: 'result', output: output, id: worker_id});
     }
 }
 
