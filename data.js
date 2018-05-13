@@ -1,6 +1,6 @@
 var Fuel = {};
 Fuel.LFO = 'Liquid Fuel and Oxydizer';
-Fuel.L = 'Liquid Fuel Only';
+Fuel.LF = 'Liquid Fuel Only';
 Fuel.M = 'MonoPropellant';
 Fuel.X = 'Xénon';
 
@@ -32,4 +32,8 @@ var Engines = [
     {name: 'S3 KS-25 "Vector" LFE', ISP: {atm: 295, vac: 315}, Thrust: {atm: 935.508, vac: 1000}, Mass: {full: 4, empty: 4}, stackable:true, ressource:Fuel.LFO},
     {name: 'S3 KS-25x4 "Mammoth" LFE', ISP: {atm: 295, vac: 315}, Thrust: {atm: 3746.032, vac: 4000}, Mass: {full: 15, empty: 15}, stackable:false, ressource:Fuel.LFO},
     {name: 'T-1 Toroidal Aerospike "Dart" LFE', ISP: {atm: 290, vac: 340}, Thrust: {atm: 153.529, vac: 180}, Mass: {full: 1, empty: 1}, stackable:true, ressource:Fuel.LFO},
+];
+
+var FuelTank = [
+    
 ];

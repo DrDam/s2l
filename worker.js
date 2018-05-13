@@ -38,7 +38,16 @@ onmessage = function (e) {
 
 // loop function
 function run() {
-    drawMeARocket(data);
+    output = drawMeARocket(data);
+    if (output !== null) {
+        postMessage({output: output, id: id});
+    }
+    
+    if (stopCalculation === false) {
+        timer = setTimeout(run, 100);
+    } else {
+        autostop();
+    }
 }
 
 // Processing functions
@@ -60,7 +69,7 @@ function drawMeARocket(data) {
     return output;
 }
 
-function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
+function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI,) {
 
     for (var i in availableEngines) {
         var engine = availableEngines[i];
