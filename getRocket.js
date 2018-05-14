@@ -15,7 +15,7 @@ function autostop() {
 }
 
 function killMe() {
-    console.log('woker ' + worker_id + ' send killMe');
+    //console.log('woker ' + worker_id + ' send killMe');
     postMessage({channel: 'end', id: worker_id});
 }
 
@@ -38,7 +38,7 @@ onmessage = function (e) {
     }
     if (e.data.channel == 'run') {
         stopCalculation = false;
-        console.log('start woker ' + worker_id);
+        //console.log('start woker ' + worker_id);
         drawMeARocket();
         return;
     }
@@ -46,17 +46,17 @@ onmessage = function (e) {
 
 // Processing functions
 function drawMeARocket() {
-    //console.log(data);
+    ////console.log(data);
 
     // Case 1 : Generate monobloc rocket for specific Dv
     if (globalData.rocket.type == 'mono' && globalData.rocket.stages == 1) {
-        console.log('woker ' + worker_id + ' makeSingleStageRocket');
+        //console.log('woker ' + worker_id + ' makeSingleStageRocket');
         makeSingleStageRocket(globalData);
     }
 
     // Case 1 : Generate monobloc rocket for specific Dv
     if (globalData.rocket.type == 'mono' && globalData.rocket.stages > 1) {
-        console.log('woker ' + worker_id + ' makeMultipleStageRocket');
+        //console.log('woker ' + worker_id + ' makeMultipleStageRocket');
         makeMultipleStageRocket(globalData);
     }
 }
@@ -69,9 +69,9 @@ function makeMultipleStageRocket(localData) {
         var UpperData = clone(localData);
         UpperData.rocket.dv = round(part * localData.rocket.dv);
         UpperData.rocket.stages = 1;
-//console.log(UpperData.rocket.dv);
-//console.log(UpperData);
-//console.log('******************');
+////console.log(UpperData.rocket.dv);
+////console.log(UpperData);
+////console.log('******************');
         var simpleWorkers = generateWorkers('getStage', localData.simu.nbWorker);
         var counter = 0;
         for (var i in simpleWorkers) {
@@ -94,9 +94,9 @@ function makeMultipleStageRocket(localData) {
                     NextData.rocket.dv = localData.rocket.dv - UpperData.rocket.dv;
                     NextData.rocket.stages = localData.rocket.stages - 1;
                     NextData.cu.mass = UpperStageData.totalMass;
-//console.log(NextData);
-//console.log(UpperStageData);
-//console.log('******************');
+////console.log(NextData);
+////console.log(UpperStageData);
+////console.log('******************');
                     var nextWorker = generateWorkers('getRocket', 1);
                     for (var i in nextWorker) {
                         nextWorker[i].postMessage({channel: "init", id: i, fragment_id: counter, data: NextData});
@@ -111,10 +111,10 @@ function makeMultipleStageRocket(localData) {
                                 }
                             }
                             if (result.channel == 'result') {
-//console.log(worker_id);
-//console.log(result);
-//console.log('******************');
-                                //console.log('woker ' + result.id + ' callback');
+////console.log(worker_id);
+////console.log(result);
+////console.log('******************');
+                                ////console.log('woker ' + result.id + ' callback');
                                 var output_stages = {};
 
                                 var stages = result.output.stages;
@@ -131,7 +131,7 @@ function makeMultipleStageRocket(localData) {
                                     burn: burn,
                                     dv: 'targetDv',
                                 }
-                              //  console.log(output);
+                              //  //console.log(output);
                                 postMessage({channel: 'result', output: output, id: worker_id});
                             }
 
@@ -159,7 +159,7 @@ function makeSingleStageRocket(localData) {
         simpleWorkers[i].onmessage = function (e) {
             var result = e.data;
             if (result.channel == 'result') {
-                //console.log('woker ' + result.id + ' callback');
+                ////console.log('woker ' + result.id + ' callback');
                 postMessage({channel: 'result', output: result.output, id: worker_id});
             }
             if (result.channel == 'end') {

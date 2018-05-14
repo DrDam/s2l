@@ -4,7 +4,7 @@ var fragment_id;
 var data = {}
 
 function autostop() {
-    console.log('woker ' + worker_id + ' stop');
+    //console.log('woker ' + worker_id + ' stop');
     postMessage({channel: 'end', id: worker_id});
 }
 
@@ -27,7 +27,7 @@ onmessage = function (e) {
         return;
     }
     if (e.data.channel == 'run') {
-        console.log('start woker ' + worker_id);
+        //console.log('start woker ' + worker_id);
         drawMeARocket();
         return;
     }
@@ -85,7 +85,7 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             burn: stage.burn,
             dv: targetDv,
         }
-        //console.log('result from ' + worker_id);
+        ////console.log('result from ' + worker_id);
         postMessage({channel: 'result', output: output, id: worker_id});
     }
 }
