@@ -1,3 +1,4 @@
+<hr>
 <div class="stage" id="stage_{{stage_id}}">
     <div>Engine : {{engine}}</div>
     <div>Fuel Mass : {{mcarbu}}t</div>
