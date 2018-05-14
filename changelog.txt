@@ -2,6 +2,10 @@
 # Changelog #
 #############
 
+v0.0.3
+- Add Multiworker Generation
+- Add calcul of multistage Monobloc launcher
+
 v0.0.2
 - Add table generation
 - Add calcul of the a SSTO launcher ( 1 stage to orbit)
