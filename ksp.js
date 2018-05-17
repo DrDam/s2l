@@ -1,10 +1,8 @@
 // Jquery
 $(function () {
-
     //  Workers configuration
     var nbWorkers = 2;
-    var master;
-    
+    var masters = [];
     // Table initialisation
     var resultTable = null;
     var result_id = 0;
@@ -17,7 +15,11 @@ $(function () {
 
     // Binding Stop button
     $('#stop').click(function () {
-        master.postMessage({channel: "stop"});
+        for (var i in masters) {
+            if(masters[i] != null) {
+                masters[i].postMessage({channel: "stop"});
+            }
+        }
     });
 
     // Binding start Button
@@ -70,34 +72,52 @@ $(function () {
             engines: Engines
         };
 
-        // Run Calculation
+        var nbStage;
         result_id = 0;
-        master = new Worker('getRocket.js');
-        master.postMessage({channel: "init", id: "master", data: data});
-        master.postMessage({channel: "run"});
-        master.onmessage = function (e) {
-            var result = e.data;
-            if(result.channel == 'result') {
-                updateDom(e.data.output);
-            }
-            if(result.channel == 'end') {
-                master.terminate();
-                master = null;
-            }
-        };
+        masters = [];
+        // Create workers
+        for (nbStage = 0; nbStage < data.rocket.stages; nbStage++) {
+            var w = new Worker("getRocket.js");
+            var master_id = "master-" + nbStage;
+            masters[master_id] = w;
+        }
+        // Launch simulation for each stage
+        var nbStages = 0;
+        for (var id in masters) {
+            var nbstages = nbStages + 1;
+            var master_data = clone(data);
+            master_data.rocket.stages = nbstages;
+
+            masters[id].postMessage({channel: "init", id: id, data: master_data});
+            masters[id].postMessage({channel: "run"});
+            masters[id].onmessage = function (e) {
+                var result = e.data;
+                if (result.channel == 'result') {
+                    updateDom(e.data.output);
+                }
+                if (result.channel == 'end') {
+                    var id_to_kill = result.id;
+                    debug('kill ' + id_to_kill);
+                    masters[id_to_kill].terminate();
+                    masters[id_to_kill] = null;
+                }
+            };
+            nbStages++;
+        }
         return false;
     });
 
     // Add a row in table
     function updateDom(data) {
-       // console.log('###################');
-      //  console.log(data);
-       // console.log('###################');
+      /* debug('###################');
+       debug(data);
+       debug('###################');*/
         result_id++;
         var mass = data.totalMass;
+        var nbStages = data.nbStages;
         var dv = "xxx";
         var stages = printStages(data.stages);
-        resultTable.row.add([result_id, mass, dv, stages]).draw();
+        resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
     }
 
     function printStages(stages) {
@@ -111,4 +131,5 @@ $(function () {
 
         return output;
     }
+    
 });

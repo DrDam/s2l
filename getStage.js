@@ -1,16 +1,12 @@
+importScripts('lib.js');  
 // Generate 1 stage Rocket
 var worker_id;
 var fragment_id;
 var data = {}
 
 function autostop() {
-    //console.log('woker ' + worker_id + ' stop');
+    debug('worker ' + worker_id + ' stop');
     postMessage({channel: 'end', id: worker_id});
-}
-
-function round(number, precision = 2) {
-    var factor = Math.pow(10, precision);
-    return Math.round(number * factor) / factor;
 }
 
 // Communication
@@ -27,7 +23,7 @@ onmessage = function (e) {
         return;
     }
     if (e.data.channel == 'run') {
-        //console.log('start woker ' + worker_id);
+        debug('start woker ' + worker_id);
         drawMeARocket();
         return;
     }
@@ -84,8 +80,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             totalMass: stage.totalMass,
             burn: stage.burn,
             dv: targetDv,
-        }
-        ////console.log('result from ' + worker_id);
+            nbStages: 1,
+        };
         postMessage({channel: 'result', output: output, id: worker_id});
     }
 }
