@@ -43,11 +43,15 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
 
     for (var i in availableEngines) {
         var engine = availableEngines[i];
-
-        var ISP = engine.ISP.vac;
-        var Thrust = engine.Thrust.vac;
-        var MassEngineFull = engine.Mass.full;
-        var MassEngineDry = engine.Mass.empty;
+        
+        var caracts = getEngineCaract(engine);
+        var curveData = getEngineCurveDateForAtm(caracts, 0);
+        
+        var ISP = curveData.ISP;
+        var Thrust = curveData.Thrust;
+        
+        var MassEngineFull = engine.mass.full;
+        var MassEngineDry = engine.mass.empty;
 
         // calculate Fuel mass for the needed for Dv
         var MstageDry = cu.mass + MassEngineDry;
@@ -83,6 +87,24 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             nbStages: 1,
         };
         postMessage({channel: 'result', output: output, id: worker_id});
+    }
+}
+
+function getEngineCaract(engine) {
+
+            var modes = engine.modes;
+            for(var mode_id in modes) {
+                return modes[mode_id][0];
+            }
+}
+
+function getEngineCurveDateForAtm(engineCaracts, AtmPressur) {
+    var curve = engineCaracts.curve;
+    for(var point_id in curve) {
+        var point = curve[point_id];
+        if(point.atmo == AtmPressur) {
+            return point;
+        }
     }
 }
 

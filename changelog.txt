@@ -2,6 +2,10 @@
 # Changelog #
 #############
 
+v0.0.5
+- Get Engines & FuelTanks from kspapi.drdamlab.net
+- Fix calculation ended
+
 v0.0.4
 - Number stager become Max stage & calcul for each values
 

@@ -6,7 +6,6 @@
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.1.3/mustache.min.js"></script>
-    <script type="text/javascript" src="data.js"></script>
     <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="ksp.js"></script>
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
@@ -15,7 +14,7 @@
 <body>
 
     <h1>Draw me a launcher</h1>
-    <p>v0.0.4</p>
+    <p>v0.0.5</p>
     <a href="plan.txt" target="_blank">developpement plan</a>
     <a href="changelog.txt" target="_blank">changelog</a>    
     
@@ -59,8 +58,8 @@
             <label>maximal</label><input id="Tmax" name="Tmax" type="text" value="5"/>
         </li>
     </ul>
-    <input type="button" value='Arreter la simulation' id='stop' name='stop'/>
-    <input type="submit" value='Dessines-moi un lanceur' id='start' name='start'/>
+    <input type="button" class='action_button' value='Arreter la simulation' id='stop' name='stop'/>
+    <input type="submit" class='action_button' value='Dessines-moi un lanceur' id='start' name='start'/>
     
 </form>
 
