@@ -49,7 +49,6 @@
                     Engines.push(engine);
                 }
             }
-            console.log(Engines);
             loadCollectionValidation('engines');
         });
 
