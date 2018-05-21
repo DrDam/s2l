@@ -1,4 +1,5 @@
 importScripts('lib.js');  
+importScripts('subworkers.js');  
 // Generate X stage Rocket
 var worker_id;
 var globalData = {}
