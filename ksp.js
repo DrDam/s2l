@@ -3,8 +3,15 @@
     $(document).ready(function () {
 
         // toggle information block
-        $( "#readme_button" ).click(function() {
-          $( "#readme" ).toggle( "slow", function() {});
+        $("#readme_button").click(function () {
+            $("#readme").toggle("slow", function () {});
+        });
+
+        // toggle advanced configuration
+        $("#advanced_button").click(function (event) {
+            event.preventDefault();
+            $("#advanced").toggle("slow", function () {});
+            return false;
         });
 
         // Desactivate action button if Engine & FuelTanks are no loaded
@@ -49,7 +56,7 @@
                         delete modes[mode_id];
                     }
                 }
-                if(engine.is_radial === true) {
+                if (engine.is_radial === true) {
                     continue;
                 }
                 if (Object.keys(modes).length > 0) {
@@ -74,9 +81,8 @@
 
 
         //  Workers configuration
-        var nbWorkers = 4;
         var masters = [];
-        
+
         // Table initialisation
         var resultTable = null;
         var result_id = 0;
@@ -100,7 +106,7 @@
 
         // Binding start Button
         $('#param').submit(function (event) {
-
+            event.preventDefault();
             $('#start').prop('disabled', true);
             $('#stop').prop('disabled', false);
 
@@ -116,7 +122,6 @@
                 });
             }
             resultTable.clear().draw();
-            event.preventDefault();
 
             // Get form values
             var elems = event.currentTarget.elements;
@@ -137,10 +142,12 @@
                 max: parseFloat(elems.Tmax.value)
             };
 
+            var nbWorkers = parseInt(elems.nbworker.value);
+
             var simu = {};
             simu.nbWorker = nbWorkers;
-            simu.step = 10;
-            simu.maxTanks = 3;
+            simu.step = parseInt(elems.Step.value);
+            simu.maxTanks = parseInt(elems.nbTanks.value);
 
             var data = {
                 SOI: SOI,
@@ -151,6 +158,11 @@
                 fuelTanks: FuelTank,
                 fuelTypes: FuelTypes,
             };
+
+            debug('###################');
+            debug('input data');
+            debug(data);
+            debug('###################');
 
             var nbStage;
             result_id = 0;
@@ -181,21 +193,24 @@
                         masters[id_to_kill].terminate();
                         masters[id_to_kill] = null;
                         var terminated = true;
-                        for(var i in masters) {
-                            if(masters[i] != null) {
+                        for (var i in masters) {
+                            if (masters[i] != null) {
                                 terminated = false;
                             }
                         }
-                        if(terminated == true){
+                        if (terminated == true) {
                             console.log('END Calculations');
                             $('#stop').prop('disabled', true);
                             $('#start').prop('disabled', false);
                         }
-                        
+
                     }
                 };
                 nbStages++;
             }
+            $('html, body').animate({
+                scrollTop: $("#results").offset().top
+            }, 1000);
             return false;
         });
 
@@ -208,7 +223,7 @@
             result_id++;
             var mass = data.totalMass;
             var nbStages = data.nbStages;
-            var dv = round(data.stageDv,2);
+            var dv = round(data.stageDv, 2);
             var stages = printStages(data.stages, dv);
             resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
         }
@@ -218,13 +233,13 @@
             for (var i in stages) {
                 var stage = stages[i];
                 stage.stage_id = i;
-                stage.Dv = round(stage.stageDv,2);
+                stage.Dv = round(stage.stageDv, 2);
                 stage.FullDv = fullDv;
                 var tanks = stage.tanks;
                 var tanksNames = [];
-                for(var j in tanks) {
+                for (var j in tanks) {
                     var tank = tanks[j];
-                    tanksNames.push({tank_name:tank.name});
+                    tanksNames.push({tank_name: tank.name});
                 }
                 stage.tanks = tanksNames;
                 var rendered = Mustache.render(stageTPL, stage);

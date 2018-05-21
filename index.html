@@ -70,6 +70,24 @@
             <label>maximal</label><input id="Tmax" name="Tmax" type="text" value="5"/>
         </li>
     </ul>
+    
+    <a id="advanced_button">Advanced (dangerous)</a>
+    <div id="advanced" style='display:none'>
+        <label>Changing there configuration can Fuck your Computer</label>
+        <label> Simulation </label>
+        <ul>
+            <li>
+                <label>Worker number</label><input id="nbworker" name="nbworker" type="text" value="4"/>
+            </li>
+            <li>
+                <label>Dv steps for multistage</label><input id="Step" name="Step" type="text" value="10"/>
+            </li>
+            <li>
+                <label>Max tanks per stage</label><input id="nbTanks" name="nbTanks" type="text" value="3"/>
+            </li>
+        </ul>
+    </div>
+    <hr>
     <input type="button" class='action_button' value='Arreter la simulation' id='stop' name='stop'/>
     <input type="submit" class='action_button' value='Dessines-moi un lanceur' id='start' name='start'/>
     
