@@ -1,5 +1,5 @@
 (function(){
-
+alert('toot');
   /* Detect if we're in a worker or not */
   var isWorker = false;
   try {
