@@ -5,4 +5,12 @@
     <div>TWR : {{twr.min}} - {{twr.max}}
     <div>Burn time : {{burn}}s</div>
     <div>Total Mass : {{totalMass}}t</div>
+    <div>Dv : {{Dv}} / {{FullDv}}</div>
+    <div>Compositions des reservoirs : 
+        <ul>
+            {{#tanks}}
+  		<li>{{tank_name}}</li>
+            {{/tanks}}    
+        </ul>
+    </div>
 </div>

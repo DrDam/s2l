@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-        <title>Dessine-moi un lanceur</title>
+    <title>Dessine-moi un lanceur</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
@@ -16,7 +16,19 @@
     <h1>Draw me a launcher</h1>
     <p>v0.0.5</p>
     <a href="plan.txt" target="_blank">developpement plan</a>
-    <a href="changelog.txt" target="_blank">changelog</a>    
+    <a href="changelog.txt" target="_blank">changelog</a>    <br>
+    <button id="readme_button" title="Purpose" type="button">Purpose & Informations</button>
+    <div id="readme" style="display:none">
+        <label>This is a "rocket configuration generator"</label>
+        <ul>
+            <li>Actualy it's limited to firefox & Edge.</li>
+            <li>- chrome, safari & co don't implement correctly webWorker specification</li>
+            <li>- see : https://bugs.chromium.org/p/chromium/issues/detail?id=31666</li>
+            <li>The generator not using Jet Engine</li>
+            <li>Use only staged Engines ( not radials)</li>
+        </ul>
+
+    </div>
     
     <hr>
     <form id='param'>
@@ -25,21 +37,21 @@
         <li>
             <label>Masse charge utile (t)</label><input id="Mu" name="Mu" type="text" value="1"/>
         </li>
-       <!-- <li>
+       <li>
             <label>Diamètre coiffe charge utile souhaité</label>
-            <select id="tailleCU" name="tailleCU">
-				<option value=1>1.5m</option><option selected value=2>3m</option><option value=3>4.5m</option><option value=4>5m</option>
+            <select id="sizeCU" name="tailleCU">
+                <option value=size1>1.5m</option>
+                <option selected value=size2>3m</option>
+                <option value=size3>4.5m</option>
+                <option value=size4>5m</option>
             </select>
-        </li>-->
+        </li>
     </ul>
     <label>Mission</label>
     <ul>
         <li>
             <label>Capacité cible du lanceur (m/s)</label><input id="DvCible" name="DvCible" type="text" value="4500"/>
         </li>
-       <!-- <li>
-			    <label><input type=checkbox id=retour value=1 />Carburant supplémentaire pour désorbitation du dernier étage du lanceur</label>
-        </li> -->
     </ul>
     <label> Lanceur </label>
     <ul>

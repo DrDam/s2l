@@ -2,6 +2,11 @@
 (function ($) {
     $(document).ready(function () {
 
+        // toggle information block
+        $( "#readme_button" ).click(function() {
+          $( "#readme" ).toggle( "slow", function() {});
+        });
+
         // Desactivate action button if Engine & FuelTanks are no loaded
         $('.action_button').each(function () {
             $(this).prop('disabled', true);
@@ -44,6 +49,9 @@
                         delete modes[mode_id];
                     }
                 }
+                if(engine.is_radial === true) {
+                    continue;
+                }
                 if (Object.keys(modes).length > 0) {
                     engine.id = id;
                     Engines.push(engine);
@@ -66,7 +74,7 @@
 
 
         //  Workers configuration
-        var nbWorkers = 2;
+        var nbWorkers = 4;
         var masters = [];
         
         // Table initialisation
@@ -118,13 +126,12 @@
 
             var CU = {};
             CU.mass = parseFloat(elems.Mu.value);
-            //CU.taille = elems.tailleCU.value;
+            CU.size = elems.sizeCU.value;
 
             var rocket = {};
             rocket.dv = parseFloat(elems.DvCible.value);
             rocket.type = elems.type.value;
             rocket.stages = parseInt(elems.nbStage.value);
-            //rocket.desorbit = elems.retour.value;
             rocket.twr = {
                 min: parseFloat(elems.Tmin.value),
                 max: parseFloat(elems.Tmax.value)
@@ -133,6 +140,7 @@
             var simu = {};
             simu.nbWorker = nbWorkers;
             simu.step = 10;
+            simu.maxTanks = 3;
 
             var data = {
                 SOI: SOI,
@@ -141,7 +149,7 @@
                 simu: simu,
                 engines: Engines,
                 fuelTanks: FuelTank,
-                FuelTypes: FuelTypes,
+                fuelTypes: FuelTypes,
             };
 
             var nbStage;
@@ -193,22 +201,32 @@
 
         // Add a row in table
         function updateDom(data) {
-            /* debug('###################');
-             debug(data);
-             debug('###################');*/
+            debug('###################');
+            debug('output to table');
+            debug(data);
+            debug('###################');
             result_id++;
             var mass = data.totalMass;
             var nbStages = data.nbStages;
-            var dv = "xxx";
-            var stages = printStages(data.stages);
+            var dv = round(data.stageDv,2);
+            var stages = printStages(data.stages, dv);
             resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
         }
 
-        function printStages(stages) {
+        function printStages(stages, fullDv) {
             var output = '';
             for (var i in stages) {
                 var stage = stages[i];
                 stage.stage_id = i;
+                stage.Dv = round(stage.stageDv,2);
+                stage.FullDv = fullDv;
+                var tanks = stage.tanks;
+                var tanksNames = [];
+                for(var j in tanks) {
+                    var tank = tanks[j];
+                    tanksNames.push({tank_name:tank.name});
+                }
+                stage.tanks = tanksNames;
                 var rendered = Mustache.render(stageTPL, stage);
                 output += rendered;
             }

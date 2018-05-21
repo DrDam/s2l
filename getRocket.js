@@ -121,13 +121,14 @@ function makeMultipleStageRocket(localData) {
                                 for (var i in stages) {
                                     output_stages.push(stages[i]);
                                 }
+                                var total_dv =  UpperStageData.stageDv + result.output.stageDv;
                                 //debug(localData);
                                 var output = {
                                     stages: output_stages,
                                     nbStages: localData.rocket.stages,
                                     totalMass: total_mass,
                                     burn: burn,
-                                    dv: 'targetDv',
+                                    stageDv: total_dv,
                                 }
                                //debug('******************');
                                //debug(worker_id);
