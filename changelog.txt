@@ -2,9 +2,6 @@
 # Changelog #
 #############
 
-dev
-- Correct subworker for chrome
-
 v0.0.5
 - Get Engines & FuelTanks from kspapi.drdamlab.net
 - Fix calculation ended
