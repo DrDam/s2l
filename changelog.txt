@@ -2,6 +2,10 @@
 # Changelog #
 #############
 
+v0.0.6
+- Fuel Tank selection
+- Add advanced paramters
+
 v0.0.5
 - Get Engines & FuelTanks from kspapi.drdamlab.net
 - Fix calculation ended

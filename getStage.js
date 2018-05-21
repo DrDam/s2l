@@ -149,9 +149,10 @@ function testTwr(Thrust, Mass, target, Go) {
 
 function getFuelTank(stageData) {
 
-    /*console.log('#################');
+    /*
+    console.log('#################');
     console.log('fuel need (t) : ' + stageData.mCarbu);
-*/
+    */
     for (var i in stageData.engine.modes) {
         var EnginesNeeded = stageData.engine.modes[i][0].conso.proportions;
     }
