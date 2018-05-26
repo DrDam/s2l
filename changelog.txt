@@ -3,6 +3,9 @@
 #############
 
 v0.0.6
+- Add chrome ( and some other I guess) compatibility
+
+v0.0.6
 - Fuel Tank selection
 - Add advanced paramters
 

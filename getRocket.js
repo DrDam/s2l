@@ -1,4 +1,4 @@
-importScripts('lib.js');  
+importScripts('subworkers.js','lib.js');  
 
 // Generate X stage Rocket
 var worker_id;
@@ -18,11 +18,11 @@ function autostop() {
 
 function killMe() {
     debug('worker ' + worker_id + ' send killMe');
-    postMessage({channel: 'end', id: worker_id});
+    self.postMessage({channel: 'end', id: worker_id});
 }
 
 // Communication
-onmessage = function (e) {
+self.addEventListener('message',function(e){
     if (e.data.channel == 'stop') {
         autostop();
         return;
@@ -38,7 +38,7 @@ onmessage = function (e) {
         drawMeARocket();
         return;
     }
-}
+});
 
 // Processing functions
 function drawMeARocket() {
@@ -73,7 +73,7 @@ function makeMultipleStageRocket(localData) {
         for (var i in simpleWorkers) {
             simpleWorkers[i].postMessage({channel: "init", id: i, fragment_id: counter, data: UpperData});
             simpleWorkers[i].postMessage({channel: "run"});
-            simpleWorkers[i].onmessage = function (e) {
+            simpleWorkers[i].addEventListener('message',function(e){
                 var result = e.data;
                 if (result.channel == 'end') {
                     debug('worker ' + result.id + ' send killMe');
@@ -97,7 +97,7 @@ function makeMultipleStageRocket(localData) {
                     for (var i in nextWorker) {
                         nextWorker[i].postMessage({channel: "init", id: i, fragment_id: counter, data: NextData});
                         nextWorker[i].postMessage({channel: "run"});
-                        nextWorker[i].onmessage = function (e) {
+                        nextWorker[i].addEventListener('message',function(e){
                             var result = e.data;
                             if (result.channel == 'end') {
                                 debug('worker ' + result.id + ' send killMe');
@@ -134,14 +134,14 @@ function makeMultipleStageRocket(localData) {
                                //debug(worker_id);
                                //debug(output);
                                //debug('******************');
-                               postMessage({channel: 'result', output: output, id: worker_id});
+                               self.postMessage({channel: 'result', output: output, id: worker_id});
                             }
 
 
-                        }
+                        });
                     }
                 }
-            };
+            });
             counter++;
         }
     }
@@ -158,7 +158,7 @@ function makeSingleStageRocket(localData) {
     for (var i in simpleWorkers) {
         simpleWorkers[i].postMessage({channel: "init", id: i, fragment_id: counter, data: localData});
         simpleWorkers[i].postMessage({channel: "run"});
-        simpleWorkers[i].onmessage = function (e) {
+        simpleWorkers[i].addEventListener('message',function(e){
             var result = e.data;
             if (result.channel == 'result') {
                 //debug(worker_id);
@@ -175,7 +175,7 @@ function makeSingleStageRocket(localData) {
                 }
             }
 
-        };
+        });
         counter++;
     }
 }

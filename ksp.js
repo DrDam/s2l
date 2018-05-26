@@ -182,7 +182,7 @@
 
                 masters[id].postMessage({channel: "init", id: id, data: master_data});
                 masters[id].postMessage({channel: "run"});
-                masters[id].onmessage = function (e) {
+                masters[id].addEventListener('message',function(e){		
                     var result = e.data;
                     if (result.channel == 'result') {
                         updateDom(e.data.output);
@@ -205,7 +205,7 @@
                         }
 
                     }
-                };
+                });
                 nbStages++;
             }
             $('html, body').animate({

@@ -6,11 +6,11 @@ var Global_data = {};
 
 function autostop() {
     debug('worker ' + worker_id + ' stop');
-    postMessage({channel: 'end', id: worker_id});
+    self.postMessage({channel: 'end', id: worker_id});
 }
 
 // Communication
-onmessage = function (e) {
+self.addEventListener('message',function(e){
     if (e.data.channel == 'stop') {
         autostop();
         return;
@@ -27,7 +27,7 @@ onmessage = function (e) {
         drawMeARocket();
         return;
     }
-};
+});
 
 // Processing functions
 function drawMeARocket() {
@@ -121,7 +121,7 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             stageDv: Dv,
             nbStages: 1
         };
-        postMessage({channel: 'result', output: output, id: worker_id});
+        self.postMessage({channel: 'result', output: output, id: worker_id});
     }
 }
 
