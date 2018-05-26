@@ -2,6 +2,9 @@
 # Changelog #
 #############
 
+v0.0.8
+- Corrections in tank stack definition
+
 v0.0.7
 - Add chrome ( and some other I guess) compatibility
 - bugs in getStage

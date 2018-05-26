@@ -79,17 +79,23 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
 
         // Get Tank configuration
         var stageData = {
+            // Engine informations
             engine: engine,
-            cu: cu,
-            mCarbu: Mcarbu,
-            targetDv: targetDv,
-            thrust: Thrust,
-            twr: twr,
             ISP: ISP,
+            thrust: Thrust,
+            
+            // Performance Target
+            cu: cu,
+            targetDv: targetDv,
+
+            // Constraints
+            twr: twr,
             Go: SOI.Go
         };
-        var TankSolution = getFuelTank(stageData);
+        //console.log('###########');
+        var TankSolution = getFuelTankSolution(stageData);
         //console.log(TankSolution);
+        //console.log('###########');
 
         // Correct Mass of Stage
         var MstageFull = cu.mass + MassEngineFull + TankSolution.mFuel + TankSolution.mDry;
@@ -148,12 +154,12 @@ function testTwr(Thrust, Mass, target, Go) {
     return(Twr > target.min && Twr < target.max);
 }
 
-function getFuelTank(stageData) {
 
-    /*
-    console.log('#################');
-    console.log('fuel need (t) : ' + stageData.mCarbu);
-    */
+function getFuelTankSolution(stageData) {
+    
+    var bestSolution = {};
+    var bestOverflow = 999;
+    
     for (var i in stageData.engine.modes) {
         var EnginesNeeded = stageData.engine.modes[i][0].conso.proportions;
     }
@@ -161,119 +167,110 @@ function getFuelTank(stageData) {
     var engine_size = stageData.engine.stackable.top;
     var Tanks = preSelectTanks(EnginesNeeded);
 
-    var bestSolution = {};
-    var bestOverflow = 999;
-
+    // 1) make all possible assembly
     var nbTanks;
     for (nbTanks = 1; nbTanks <= Global_data.simu.maxTanks; nbTanks++) {
-
-        var last = false;
-        if (nbTanks == 1) {
-            last = true;
+        
+        // Make a possible Assembly
+        var localBest = getValideAssembly(stageData, cu_size, engine_size, Tanks, nbTanks);
+        if(localBest != null) {
+            //console.log(localBest);
+            // 3) select best assembly => less OverFlow
+            if (localBest.overflow < bestOverflow) {
+                bestOverflow = localBest.overflow;
+                bestSolution = localBest;
+            }
         }
 
-        var localBest = getTankSolution(stageData.mCarbu, cu_size, engine_size, Tanks, last, nbTanks);
-     /*   console.log('**************');
-        console.log(localBest);
-        console.log('**************');*/
-        if(localBest == null) {
-            continue;
-        }
-        // test solution againt best knowed
-        if (localBest.overflow < bestOverflow && localBest.mFuel > stageData.mCarbu) {
-            bestOverflow = localBest.overflow;
-            bestSolution = localBest;
-        }
     }
     
     return bestSolution;
 }
 
 
-function getTankSolution(Target, topSize, BottomSize, availableTanks, last = false, nbTanks = 1) {
-
-    if (nbTanks == 1) {
-        var bestOverflowSolution = {};
-        var bestRestSolution = {};
-        var bestOverflow = 999;
-        var bestRest = 0;
-
-        for (var i in availableTanks) {
-            var tank = availableTanks[i];
-            var fuelMass = tank.mass.full - tank.mass.empty;
-
-            // If a tank exist with good top & bottom Size
-            if (topSize == tank.stackable.top && BottomSize == tank.stackable.bottom) {
-                var overflow = fuelMass - Target;
-
-                // Tank provide exact amount of full or to much 
-                if (overflow == 0) {
-                    return {solution: [tank], overflow: overflow, top: tank.stackable.top, bottom: tank.stackable.bottom};
-                }
-
-                // Tank provide to much fuel
-                if (overflow > 0) {
-                    if (Target <= fuelMass && bestOverflow > overflow) {
-                        bestOverflow = overflow;
-                        bestOverflowSolution = {solution: [tank], mFuel: fuelMass, mDry: tank.mass.empty, overflow: overflow, top: tank.stackable.top, bottom: tank.stackable.bottom};
-                    } else {
-                        continue;
-                    }
-                }
-
-                // Tank provide to less Fuel
-                if (overflow < 0) {
-                    if (bestRest > (-1 * overflow)) {
-                        bestRest = -1 * overflow;
-                        bestRestSolution = {solution: [tank], mFuel: fuelMass, mDry: tank.mass.empty, rest: bestRest, top: tank.stackable.top, bottom: tank.stackable.bottom};
-                    }
-                }
-            } else {
+// Create a possible Assembly and validate it
+function getValideAssembly(stageData, cu_size, engine_size, availableTanks, nbTanks = 1, stack = []) {
+    var bestSolution = {};
+    var bestOverflow = 999;
+    
+    for (var i in availableTanks) {
+        var current = availableTanks[i];
+        
+        // validate construction (adaptators or respect size) 
+        if (cu_size == current.stackable.top && engine_size == current.stackable.bottom) {
+            var localStack = clone(stack);
+            localStack.push(current);
+            
+            var DvOverFlow = getStackOverflow(localStack, stageData);
+            if( DvOverFlow != null) {
+                var output = {};
+                output.solution = localStack;
+                output.overflow = DvOverFlow;
+                var stackdata = getStackMasses(localStack);
+                output.mFuel = stackdata.Mcarbu;
+                output.mDry = stackdata.Mdry;
+                return output;
+            }
+            
+            if(nbTanks == 1) {
+                // No other adition tank
                 continue;
+            };
+            
+            if(nbTanks > 1) {
+                var subComposition = getValideAssembly(stageData, current.stackable.bottom, engine_size, availableTanks, nbTanks-1, localStack);
+                if(subComposition != null) {
+                    if(bestOverflow > subComposition.overflow) {
+                        bestSolution = subComposition;
+                        bestOverflow = subComposition.overflow;
+                    }
+                }
             }
         }
-
-
-        if (last == false) {
-            return (bestRest == 0) ? null : bestRestSolution;
-        } else {
-            return (bestOverflow == 999) ? null : bestOverflowSolution;
-        }
-        
-        return null;
-
     }
-    // find multi tank solution
-    else {
-        // Find SubSolution for N-1 tanks => as a rest
-        var subSolution = getTankSolution(Target, topSize, BottomSize, availableTanks, false, nbTanks - 1);
-        if(subSolution == null) {
-            return null;
-        }
 
-        // Find last Tank of group => as a overflow
-        var lastTank = getTankSolution(subSolution.rest, subSolution.top, subSolution.bottom, availableTanks, true, 1);
-        if(lastTank == null) {
-            return null;
-        }
-
-        // Return solution
-        var solution = {};
-        solution.solution = [];
-        for (var i in subSolution.solution) {
-            var subTank = subSolution.solution[i];
-            solution.solution.push(subTank);
-        }
-        solution.solution.push(lastTank.solution[0]);
-        solution.mfuel = lastTank.mFuel + subSolution.mFuel;
-        solution.mDry = lastTank.mDry + subSolution.mDry;
-        solution.overflow = lastTank.overflow - subSolution.rest;
-        solution.top = subSolution.top;
-        solution.bottom = lastTank.bottom;
-        return solution;
+    if(bestOverflow < 999) {
+        return bestSolution;
     }
+    return null;
 }
 
+function getStackMasses(stack) {
+        // Get Mass as 1 tank
+    var Mfull = 0;
+    var Mdry = 0;
+    for (i in stack) {
+        var tank = stack[i];
+        Mfull += tank.mass.full;
+        Mdry += tank.mass.empty;
+    }
+    return {Mdry: Mdry, Mfull:Mfull, Mcarbu:Mfull-Mdry};
+}
+
+function getStackOverflow(stack, stageData) {
+    
+    var stackData = getStackMasses(stack);
+
+    // Prepare Masses values
+    var MassEngineFull = stageData.engine.mass.full;
+    var MassEngineDry = stageData.engine.mass.empty;
+    var MstageDry = stageData.cu.mass + MassEngineDry + stackData.Mdry;
+    var MstageFull = stageData.cu.mass + MassEngineFull + stackData.Mfull;
+    
+    // test Dv
+    var Dv = stageData.ISP * stageData.Go * Math.log(MstageFull / MstageDry);
+    if(Dv < stageData.targetDv) {
+        return null;
+    }
+    
+    // Test TWR
+    if (!testTwr(stageData.thrust, MstageFull, stageData.twr, stageData.Go)) {
+        return null;
+    }
+    
+    // Return Dv Overflow
+    return Dv - stageData.targetDv;
+}
 
 
 function preSelectTanks(EnginesNeeded) {
