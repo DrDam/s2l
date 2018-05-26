@@ -60,7 +60,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         // calculate Fuel mass for the needed for Dv
         var DvFactor = Math.exp(targetDv / (ISP * SOI.Go));
         var Mcarbu = (DvFactor - 1) * MstageDry;
-
+        // Calcul of Mcarbu => OK ! Verified 10times
+        
         // If Engine contain fuel ( Booster or TwinBoar
         if (MassEngineDry < MassEngineFull) {
             Mcarbu -= (MassEngineFull - MassEngineDry);
@@ -236,7 +237,7 @@ function getTankSolution(Target, topSize, BottomSize, availableTanks, last = fal
         if (last == false) {
             return (bestRest == 0) ? null : bestRestSolution;
         } else {
-            return (bestOverflow == 0) ? null : bestOverflowSolution;
+            return (bestOverflow == 999) ? null : bestOverflowSolution;
         }
         
         return null;
@@ -264,7 +265,7 @@ function getTankSolution(Target, topSize, BottomSize, availableTanks, last = fal
             solution.solution.push(subTank);
         }
         solution.solution.push(lastTank.solution[0]);
-        solution.mfuel = lastTank.mfuel + subSolution.mfuel;
+        solution.mfuel = lastTank.mFuel + subSolution.mFuel;
         solution.mDry = lastTank.mDry + subSolution.mDry;
         solution.overflow = lastTank.overflow - subSolution.rest;
         solution.top = subSolution.top;
