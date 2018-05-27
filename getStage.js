@@ -31,9 +31,9 @@ self.addEventListener('message',function(e){
 
 // Processing functions
 function drawMeARocket() {
-    var fragment_length = Math.ceil(Global_data.engines.length / Global_data.simu.nbWorker);
+    var fragment_length = Math.ceil(Global_data.parts.engines.length / Global_data.simu.nbWorker);
     var start = fragment_id * fragment_length;
-    var localengines = Global_data.engines.slice(start, start + fragment_length);
+    var localengines = Global_data.parts.engines.slice(start, start + fragment_length);
 
     giveMeASingleStage(localengines, Global_data.rocket.dv, Global_data.rocket.twr, Global_data.cu, Global_data.SOI.kerbin);
     autostop();
@@ -77,6 +77,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             }
         }
 
+        var decoupler = getDecoupler(cu.size);
+
         // Get Tank configuration
         var stageData = {
             // Engine informations
@@ -84,6 +86,9 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             ISP: ISP,
             thrust: Thrust,
             
+            // decoupler
+            decoupler: decoupler,
+            Mdecoupler: decoupler.mass.full,
             // Performance Target
             cu: cu,
             targetDv: targetDv,
@@ -98,8 +103,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         //console.log('###########');
 
         // Correct Mass of Stage
-        var MstageFull = cu.mass + MassEngineFull + TankSolution.mFuel + TankSolution.mDry;
-        var MstageDry = cu.mass + MassEngineDry + TankSolution.mDry;
+        var MstageFull = cu.mass + decoupler.mass.full + MassEngineFull + TankSolution.mFuel + TankSolution.mDry;
+        var MstageDry = cu.mass + decoupler.mass.full + MassEngineDry + TankSolution.mDry;
         
         if (!testTwr(Thrust, MstageFull, twr, SOI.Go)) {
             continue;
@@ -111,6 +116,7 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         var Dv = ISP * SOI.Go * Math.log(MstageFull / MstageDry);
         var stage = {
             engine: engine.name,
+            decoupler: decoupler.name,
             mcarbu: round(TankSolution.mFuel,4),
             twr: {
                 min: round(TwrFull),
@@ -275,8 +281,8 @@ function getStackOverflow(stack, stageData) {
 
 function preSelectTanks(EnginesNeeded) {
     var SelectedTanks = [];
-    for (var i in Global_data.fuelTanks) {
-        var tank = Global_data.fuelTanks[i];
+    for (var i in Global_data.parts.fuelTanks) {
+        var tank = Global_data.parts.fuelTanks[i];
 
         // Filters tanks by ressources
         var tankContent = getRessourcesKey(tank.ressources)
@@ -298,4 +304,13 @@ function getRessourcesKey(obj) {
     return keys;
 }
 
+function getDecoupler(size) {
+    for (var i in Global_data.parts.decouplers) {
+        var decoupler = Global_data.parts.decouplers[i];
+
+        if(decoupler.stackable.top == size && decoupler.isOmniDecoupler == false) {
+            return decoupler;
+        }
+    }
+}
 

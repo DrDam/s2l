@@ -19,6 +19,13 @@
             $(this).prop('disabled', true);
         });
 
+        // Data from collections
+        var Parts = {};
+        Parts.engines = [];
+        Parts.fuelTanks = [];
+        Parts.decouplers = [];
+        var validationData = [];
+
         // Fuel Classification
         var FuelTypes = {};
         FuelTypes.LFO = 'Liquid Fuel and Oxydizer';
@@ -28,15 +35,10 @@
         FuelTypes.M = 'MonoPropellant';
         FuelTypes.X = 'XenonGas';
 
-        // Data from collections
-        var Engines = [];
-        var FuelTank = [];
-        var validationData = [];
-
         // Reactivate action button when the two collection are loaded
         var loadCollectionValidation = function (type) {
             validationData.push(type);
-            if (validationData.length == 2) {
+            if (validationData.length == 3) {
                 $('.action_button').each(function () {
                     $(this).prop('disabled', false);
                 });
@@ -61,7 +63,7 @@
                 }
                 if (Object.keys(modes).length > 0) {
                     engine.id = id;
-                    Engines.push(engine);
+                    Parts.engines.push(engine);
                 }
             }
             loadCollectionValidation('engines');
@@ -74,11 +76,22 @@
             for (var id in data.fuelTanks) {
                 var tank = data.fuelTanks[id];
                 tank.id = id;
-                FuelTank.push(tank);
+                Parts.fuelTanks.push(tank);
             }
             loadCollectionValidation('fuelTanks');
         });
-
+        
+        // Load Decouplers
+        $.ajax({
+            url: "http://kspapi.drdamlab.net/collection/decouplers",
+        }).done(function (data) {
+            for (var id in data.decouplers) {
+                var decoupler = data.decouplers[id];
+                decoupler.id = id;
+                Parts.decouplers.push(decoupler);
+            }
+            loadCollectionValidation('decouplers');
+        });
 
         //  Workers configuration
         var masters = [];
@@ -115,10 +128,17 @@
                 resultTable = $('#results').DataTable({
                     paging: false,
                     searching: false,
-                    "language": {
-                        "emptyTable": "No configuration found from your specifications"
+                    language: {
+                        emptyTable: "No configuration found from your specifications"
                     },
-                    "order": [[2, "asc"]]
+                    order: [[2, "asc"]],
+                    columnDefs: [
+                        { width: 50, targets: 0 },
+                        { width: 100, targets: [1] }    ,
+                        { width: 200, targets: [2,3] }                       
+                          
+                    ],
+        fixedColumns: true
                 });
             }
             resultTable.clear().draw();
@@ -154,8 +174,7 @@
                 rocket: rocket,
                 cu: CU,
                 simu: simu,
-                engines: Engines,
-                fuelTanks: FuelTank,
+                parts: Parts,
                 fuelTypes: FuelTypes,
             };
 
@@ -224,17 +243,18 @@
             var mass = data.totalMass;
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
-            var stages = printStages(data.stages, dv);
+            var stages = printStages(data.stages, mass, dv);
             resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
         }
 
-        function printStages(stages, fullDv) {
+        function printStages(stages, fullMass, fullDv) {
             var output = '';
             for (var i in stages) {
                 var stage = stages[i];
                 stage.stage_id = i;
                 stage.Dv = round(stage.stageDv, 2);
                 stage.FullDv = fullDv;
+                stage.MassLauncher = fullMass;
                 var tanks = stage.tanks;
                 var tanksNames = [];
                 for (var j in tanks) {

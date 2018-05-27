@@ -2,6 +2,9 @@
 # Changelog #
 #############
 
+v0.0.9
+- Add decouplers + styling table
+
 v0.0.8
 - Corrections in tank stack definition
 
