@@ -1,0 +1,44 @@
+
+#results {
+  width: 100%;
+  margin-top: 10px;
+}
+#results tbody tr,
+#results thead tr {
+  background-color: lightgrey;
+  margin-bottom: 5px;
+  display: flex;
+  flex-flow: row wrap;
+  border: 1px solid black;
+}
+#results tbody tr td,
+#results thead tr td {
+  vertical-align: top;
+  text-align: center;
+  padding: 5px 10px;
+  flex: 1;
+}
+#results tbody tr td:nth-child(even) {
+  background-color: grey;
+}
+#results thead tr td:first-child,
+#results tbody tr td:first-child {
+  flex: 0 0 30px;
+  width: 30px;
+}
+#results thead tr td:last-child {
+  display: none;
+}
+#results tbody tr td:last-child {
+  width: 100%;
+  flex: 1 1 100%;
+  height: 0;
+  overflow: hidden;
+  padding: 0;
+  background-color: white;
+}
+.show {
+  height: auto !important;
+  padding: 5px 10px !important;
+  border-top: 1px solid black;
+}

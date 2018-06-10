@@ -24,6 +24,7 @@
         Parts.engines = [];
         Parts.fuelTanks = [];
         Parts.decouplers = [];
+        Parts.adapters = [];
         var validationData = [];
 
         // Fuel Classification
@@ -38,7 +39,7 @@
         // Reactivate action button when the two collection are loaded
         var loadCollectionValidation = function (type) {
             validationData.push(type);
-            if (validationData.length == 3) {
+            if (validationData.length == 4) {
                 $('.action_button').each(function () {
                     $(this).prop('disabled', false);
                 });
@@ -92,6 +93,19 @@
             }
             loadCollectionValidation('decouplers');
         });
+        
+        // Load Adapters
+        $.ajax({
+            url: "http://kspapi.drdamlab.net/collection/adapters",
+        }).done(function (data) {
+            for (var id in data.adapters) {
+                var adapter = data.adapters[id];
+                adapter.id = id;
+                Parts.adapters.push(adapter);
+            }
+            loadCollectionValidation('adapters');
+        });
+
 
         //  Workers configuration
         var masters = [];
@@ -245,6 +259,9 @@
             var dv = round(data.stageDv, 2);
             var stages = printStages(data.stages, mass, dv);
             resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
+            
+            
+            
         }
 
         function printStages(stages, fullMass, fullDv) {
@@ -268,5 +285,11 @@
 
             return output;
         }
+        
+        // See Details
+        $('#results').on('click', 'tbody td', function() {
+            $(this).parent().find("td:last-child").toggleClass("show");
+        })
+        
     });
 })(jQuery);
