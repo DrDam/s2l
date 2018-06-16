@@ -16,16 +16,14 @@
 <body>
 
     <h1>Draw me a launcher</h1>
-    <p>v0.0.9</p>
+    <p>v0.0.10</p>
     <a href="plan.txt" target="_blank">developpement plan</a>
     <a href="changelog.txt" target="_blank">changelog</a>    <br>
-    <button id="readme_button" title="Purpose" type="button">Purpose & Informations</button>
+    <button id="readme_button" title="Purpose" type="button">Purpose & Actual Limitation</button>
     <div id="readme" style="display:none">
         <label>This is a "rocket configuration generator"</label>
         <ul>
-            <li>Actualy it's limited to firefox & Edge.</li>
-            <li>- chrome, safari & co don't implement correctly webWorker specification</li>
-            <li>- see : https://bugs.chromium.org/p/chromium/issues/detail?id=31666</li>
+            <li>Model are not "atm" proof ( ISP / Thrust used are for void)</li>
             <li>The generator not using Jet Engine</li>
             <li>Use only staged Engines ( not radials)</li>
         </ul>
@@ -37,15 +35,12 @@
     <label>Charge utile</label>
     <ul>
         <li>
-            <label>Masse charge utile (t)</label><input id="Mu" name="Mu" type="text" value="1"/>
+            <label>Masse charge utile (t)</label><input id="Mu" name="Mu" type="text" value="10"/>
         </li>
        <li>
             <label>Diamètre coiffe charge utile souhaité</label>
             <select id="sizeCU" name="tailleCU">
-                <option value=size1>1.5m</option>
-                <option selected value=size2>3m</option>
-                <option value=size3>4.5m</option>
-                <option value=size4>5m</option>
+                <!-- JS generated -->
             </select>
         </li>
     </ul>

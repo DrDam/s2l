@@ -90,6 +90,7 @@ function makeMultipleStageRocket(localData) {
                     NextData.rocket.dv = localData.rocket.dv - UpperData.rocket.dv;
                     NextData.rocket.stages = localData.rocket.stages - 1;
                     NextData.cu.mass = UpperStageData.totalMass;
+                    NextData.cu.size = UpperStageData.size;
 //debug(NextData);
 //debug(UpperStageData);
 //debug('******************');

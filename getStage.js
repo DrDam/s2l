@@ -1,4 +1,5 @@
 importScripts('lib.js');
+importScripts('getFuelTanks.js');
 // Generate 1 stage Rocket
 var worker_id;
 var fragment_id;
@@ -10,7 +11,7 @@ function autostop() {
 }
 
 // Communication
-self.addEventListener('message',function(e){
+self.addEventListener('message', function (e) {
     if (e.data.channel == 'stop') {
         autostop();
         return;
@@ -61,7 +62,7 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         var DvFactor = Math.exp(targetDv / (ISP * SOI.Go));
         var Mcarbu = (DvFactor - 1) * MstageDry;
         // Calcul of Mcarbu => OK ! Verified 10times
-        
+
         // If Engine contain fuel ( Booster or TwinBoar
         if (MassEngineDry < MassEngineFull) {
             Mcarbu -= (MassEngineFull - MassEngineDry);
@@ -77,18 +78,24 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             }
         }
 
+        // Add decoupler mass
         var decoupler = getDecoupler(cu.size);
+        var decouplerMass = (decoupler == null) ? 0 : decoupler.mass.full;
+        cu.mass = cu.mass + decouplerMass;
+
+        // Add commandModule if needed
+        var decoupler = getDecoupler(cu.size);
+        var command = {mass : 0};
+        var commandMass = (decoupler == null) ? 0 : command.mass;
+        cu.mass = cu.mass + commandMass;
 
         // Get Tank configuration
-        var stageData = {
+        var stageDataForTank = {
             // Engine informations
             engine: engine,
             ISP: ISP,
             thrust: Thrust,
-            
-            // decoupler
-            decoupler: decoupler,
-            Mdecoupler: decoupler.mass.full,
+
             // Performance Target
             cu: cu,
             targetDv: targetDv,
@@ -97,45 +104,60 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             twr: twr,
             Go: SOI.Go
         };
+
         //console.log('###########');
-        var TankSolution = getFuelTankSolution(stageData);
+        var TankSolution = getFuelTankSolution(stageDataForTank);
+        if(TankSolution == null) {
+            continue;
+        }
         //console.log(TankSolution);
         //console.log('###########');
 
-        // Correct Mass of Stage
-        var MstageFull = cu.mass + decoupler.mass.full + MassEngineFull + TankSolution.mFuel + TankSolution.mDry;
-        var MstageDry = cu.mass + decoupler.mass.full + MassEngineDry + TankSolution.mDry;
-        
-        if (!testTwr(Thrust, MstageFull, twr, SOI.Go)) {
-            continue;
-        }
+        // Make stage caracterics
+        var MstageFull = cu.mass + MassEngineFull + TankSolution.mFuel + TankSolution.mDry;
+        var MstageDry = cu.mass + MassEngineDry + TankSolution.mDry;
 
         var TwrFull = Thrust / MstageFull / SOI.Go;
         var TwrDry = Thrust / MstageDry / SOI.Go;
         var burnDuration = TankSolution.mFuel * ISP * SOI.Go / Thrust;
         var Dv = ISP * SOI.Go * Math.log(MstageFull / MstageDry);
+
         var stage = {
-            engine: engine.name,
             decoupler: decoupler.name,
-            mcarbu: round(TankSolution.mFuel,4),
+            commandModule: command,
+            tanks: TankSolution.solution,
+            engine: engine.name,
+            
+            mcarbu: round(TankSolution.mFuel, 4),
             twr: {
                 min: round(TwrFull),
                 max: round(TwrDry)
             },
             totalMass: round(MstageFull, 4),
             burn: round(burnDuration, 1),
-            tanks: TankSolution.solution,
-            stageDv: Dv,
+            stageDv: Dv
+            
         };
         var output = {
             stages: [stage],
             totalMass: stage.totalMass,
             burn: stage.burn,
             stageDv: Dv,
-            nbStages: 1
+            nbStages: 1,
+            size: engine.stackable.bottom
         };
         self.postMessage({channel: 'result', output: output, id: worker_id});
     }
+}
+
+function getDecoupler(size) {
+    for (var i in Global_data.parts.decouplers) {
+        var decoupler = Global_data.parts.decouplers[i];
+        if (decoupler.stackable.top == size && decoupler.isOmniDecoupler === false) {
+            return decoupler;
+        }
+    }
+    return null;
 }
 
 function getEngineCaract(engine) {
@@ -159,158 +181,3 @@ function testTwr(Thrust, Mass, target, Go) {
     var Twr = Thrust / Mass / Go;
     return(Twr > target.min && Twr < target.max);
 }
-
-
-function getFuelTankSolution(stageData) {
-    
-    var bestSolution = {};
-    var bestOverflow = 999;
-    
-    for (var i in stageData.engine.modes) {
-        var EnginesNeeded = stageData.engine.modes[i][0].conso.proportions;
-    }
-    var cu_size = stageData.cu.size;
-    var engine_size = stageData.engine.stackable.top;
-    var Tanks = preSelectTanks(EnginesNeeded);
-
-    // 1) make all possible assembly
-    var nbTanks;
-    for (nbTanks = 1; nbTanks <= Global_data.simu.maxTanks; nbTanks++) {
-        
-        // Make a possible Assembly
-        var localBest = getValideAssembly(stageData, cu_size, engine_size, Tanks, nbTanks);
-        if(localBest != null) {
-            //console.log(localBest);
-            // 3) select best assembly => less OverFlow
-            if (localBest.overflow < bestOverflow) {
-                bestOverflow = localBest.overflow;
-                bestSolution = localBest;
-            }
-        }
-
-    }
-    
-    return bestSolution;
-}
-
-
-// Create a possible Assembly and validate it
-function getValideAssembly(stageData, cu_size, engine_size, availableTanks, nbTanks = 1, stack = []) {
-    var bestSolution = {};
-    var bestOverflow = 999;
-    
-    for (var i in availableTanks) {
-        var current = availableTanks[i];
-        
-        // validate construction (adaptators or respect size) 
-        if (cu_size == current.stackable.top && engine_size == current.stackable.bottom) {
-            var localStack = clone(stack);
-            localStack.push(current);
-            
-            var DvOverFlow = getStackOverflow(localStack, stageData);
-            if( DvOverFlow != null) {
-                var output = {};
-                output.solution = localStack;
-                output.overflow = DvOverFlow;
-                var stackdata = getStackMasses(localStack);
-                output.mFuel = stackdata.Mcarbu;
-                output.mDry = stackdata.Mdry;
-                return output;
-            }
-            
-            if(nbTanks == 1) {
-                // No other adition tank
-                continue;
-            };
-            
-            if(nbTanks > 1) {
-                var subComposition = getValideAssembly(stageData, current.stackable.bottom, engine_size, availableTanks, nbTanks-1, localStack);
-                if(subComposition != null) {
-                    if(bestOverflow > subComposition.overflow) {
-                        bestSolution = subComposition;
-                        bestOverflow = subComposition.overflow;
-                    }
-                }
-            }
-        }
-    }
-
-    if(bestOverflow < 999) {
-        return bestSolution;
-    }
-    return null;
-}
-
-function getStackMasses(stack) {
-        // Get Mass as 1 tank
-    var Mfull = 0;
-    var Mdry = 0;
-    for (i in stack) {
-        var tank = stack[i];
-        Mfull += tank.mass.full;
-        Mdry += tank.mass.empty;
-    }
-    return {Mdry: Mdry, Mfull:Mfull, Mcarbu:Mfull-Mdry};
-}
-
-function getStackOverflow(stack, stageData) {
-    
-    var stackData = getStackMasses(stack);
-
-    // Prepare Masses values
-    var MassEngineFull = stageData.engine.mass.full;
-    var MassEngineDry = stageData.engine.mass.empty;
-    var MstageDry = stageData.cu.mass + MassEngineDry + stackData.Mdry;
-    var MstageFull = stageData.cu.mass + MassEngineFull + stackData.Mfull;
-    
-    // test Dv
-    var Dv = stageData.ISP * stageData.Go * Math.log(MstageFull / MstageDry);
-    if(Dv < stageData.targetDv) {
-        return null;
-    }
-    
-    // Test TWR
-    if (!testTwr(stageData.thrust, MstageFull, stageData.twr, stageData.Go)) {
-        return null;
-    }
-    
-    // Return Dv Overflow
-    return Dv - stageData.targetDv;
-}
-
-
-function preSelectTanks(EnginesNeeded) {
-    var SelectedTanks = [];
-    for (var i in Global_data.parts.fuelTanks) {
-        var tank = Global_data.parts.fuelTanks[i];
-
-        // Filters tanks by ressources
-        var tankContent = getRessourcesKey(tank.ressources)
-        var neededRessources = getRessourcesKey(EnginesNeeded);
-        if (!tankContent.equals(neededRessources)) {
-            continue;
-        }
-
-        SelectedTanks.push(tank);
-    }
-    return SelectedTanks;
-}
-
-function getRessourcesKey(obj) {
-    var keys = [];
-    for (var key in obj) {
-        keys.push(key);
-    }
-    return keys;
-}
-
-function getDecoupler(size) {
-    for (var i in Global_data.parts.decouplers) {
-        var decoupler = Global_data.parts.decouplers[i];
-
-        if(decoupler.stackable.top == size && decoupler.isOmniDecoupler == false) {
-            return decoupler;
-        }
-    }
-}
-

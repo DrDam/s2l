@@ -1,3 +1,4 @@
+DEBUG = {};
 // Jquery
 (function ($) {
     $(document).ready(function () {
@@ -19,6 +20,30 @@
             $(this).prop('disabled', true);
         });
 
+        var Sizes = [
+            { id:'size0', label:'Tiny - 0.625m'},
+            { id:'size1', label:'Small - 1.25m'},
+            { id:'size1p5', label:'Medium - 1.875m'},
+            { id:'size2', label:'Large - 2.5m'},
+            { id:'size3', label:'Extra Large - 3.75m'},
+            { id:'size4', label:'Huge - 5m'},
+            { id:'mk1', label:'Mk1 - 5m'},
+            { id:'mk2', label:'Mk2'},
+            { id:'mk3', label:'Mk3'},
+        ];
+        DEBUG.Sizes = Sizes;
+        // Populate CU size select
+        $.each(Sizes, function (i, item) {
+            var data = { 
+                value: item.id,
+                text : item.label
+            };
+            if(item.id == 'size2') {
+                data.selected = 'selected';
+            }
+            $('#sizeCU').append($('<option>', data));
+        });
+        
         // Data from collections
         var Parts = {};
         Parts.engines = [];
@@ -81,7 +106,7 @@
             }
             loadCollectionValidation('fuelTanks');
         });
-        
+
         // Load Decouplers
         $.ajax({
             url: "http://kspapi.drdamlab.net/collection/decouplers",
@@ -93,7 +118,7 @@
             }
             loadCollectionValidation('decouplers');
         });
-        
+
         // Load Adapters
         $.ajax({
             url: "http://kspapi.drdamlab.net/collection/adapters",
@@ -147,12 +172,12 @@
                     },
                     order: [[2, "asc"]],
                     columnDefs: [
-                        { width: 50, targets: 0 },
-                        { width: 100, targets: [1] }    ,
-                        { width: 200, targets: [2,3] }                       
-                          
+                        {width: 50, targets: 0},
+                        {width: 100, targets: [1]},
+                        {width: 200, targets: [2, 3]}
+
                     ],
-        fixedColumns: true
+                    fixedColumns: true
                 });
             }
             resultTable.clear().draw();
@@ -190,6 +215,7 @@
                 simu: simu,
                 parts: Parts,
                 fuelTypes: FuelTypes,
+                sizes: Sizes
             };
 
             debug('###################');
@@ -215,7 +241,7 @@
 
                 masters[id].postMessage({channel: "init", id: id, data: master_data});
                 masters[id].postMessage({channel: "run"});
-                masters[id].addEventListener('message',function(e){		
+                masters[id].addEventListener('message', function (e) {
                     var result = e.data;
                     if (result.channel == 'result') {
                         updateDom(e.data.output);
@@ -259,9 +285,9 @@
             var dv = round(data.stageDv, 2);
             var stages = printStages(data.stages, mass, dv);
             resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
-            
-            
-            
+
+
+
         }
 
         function printStages(stages, fullMass, fullDv) {
@@ -285,11 +311,11 @@
 
             return output;
         }
-        
+
         // See Details
-        $('#results').on('click', 'tbody td', function() {
+        $('#results').on('click', 'tbody td', function () {
             $(this).parent().find("td:last-child").toggleClass("show");
         })
-        
+
     });
 })(jQuery);
