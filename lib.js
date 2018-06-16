@@ -1,4 +1,4 @@
-var Debug = false;
+var Debug = true;
 var debug = function(message) {
     if(Debug === true) {
         console.log(message);

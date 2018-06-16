@@ -16,7 +16,7 @@ function getFuelTankSolution(stageData) {
     // 1) make all possible assembly
     var nbTanks;
     for (nbTanks = 1; nbTanks <= Global_data.simu.maxTanks; nbTanks++) {
-
+        if(Global_status == 'stop') {return null;}
         // Make a possible Assembly
         var localBest = getValideAssembly(stageData, targetSizes, Tanks, nbTanks);
         if(localBest != null) {
@@ -68,6 +68,7 @@ function getValideAssembly(stageData, targetSizes, availableTanks, nbTanks = 1, 
     var bestOverflow = 999;
 
     for (var i in availableTanks) {
+        if(Global_status == 'stop') {return null;}
         var current = availableTanks[i];
         var localStack = clone(stack);
         localStack.push(current);

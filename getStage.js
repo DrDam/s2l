@@ -4,7 +4,7 @@ importScripts('getFuelTanks.js');
 var worker_id;
 var fragment_id;
 var Global_data = {};
-
+var Global_status = 'run';
 function autostop() {
     debug('worker ' + worker_id + ' stop');
     self.postMessage({channel: 'end', id: worker_id});
@@ -13,8 +13,9 @@ function autostop() {
 // Communication
 self.addEventListener('message', function (e) {
     if (e.data.channel == 'stop') {
+        Global_status = 'stop';
         autostop();
-        return;
+        close();
     }
 
     if (e.data.channel == 'init') {
@@ -44,6 +45,7 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
 
     //availableEngines = [availableEngines[8]];
     for (var i in availableEngines) {
+        if(Global_status == 'stop') {return null;}
         var engine = availableEngines[i];
 
         // Get Engine ISP / Thrust

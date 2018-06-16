@@ -6,7 +6,7 @@ var globalData = {}
 var globalWorkers = [];
 var globalWorkersStatus = [];
 var globalCounter = 0;
-
+var Global_status = 'run';
 function autostop() {
     for (i in globalWorkersStatus) {
         if (globalWorkersStatus[i] == 1) {
@@ -24,8 +24,9 @@ function killMe() {
 // Communication
 self.addEventListener('message',function(e){
     if (e.data.channel == 'stop') {
+        Global_status = 'stop';
         autostop();
-        return;
+        close();
     }
     if (e.data.channel == 'init') {
         worker_id = e.data.id;
@@ -61,6 +62,7 @@ function makeMultipleStageRocket(localData) {
     // generate DV repartition
     var i;
     for (i = 0; i < 9; i++) {
+        if(Global_status == 'stop') {return null;}
         var part = (i + 1) * 10 / 100;
         var UpperData = clone(localData);
         UpperData.rocket.dv = round(part * localData.rocket.dv);
@@ -84,6 +86,7 @@ function makeMultipleStageRocket(localData) {
                     }
                 }
                 if (result.channel == 'result') {
+                    if(Global_status == 'stop') {return null;}
                     //debug(result);
                     var UpperStageData = result.output;
                     var NextData = clone(localData);
@@ -109,6 +112,7 @@ function makeMultipleStageRocket(localData) {
                                 }
                             }
                             if (result.channel == 'result') {
+                                if(Global_status == 'stop') {return null;}
 //debug(worker_id);
 //debug(result);
 //debug('******************');
