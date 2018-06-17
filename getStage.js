@@ -17,7 +17,7 @@ self.addEventListener('message', function (e) {
         Global_status = 'stop';
         autostop();
         var stoped = new Date();
-        debug('worker ' + worker_id + ' stoped after ' + round((stoped - created) / 1000,0) + "sec");
+        debug('worker ' + worker_id + ' stoped after ' + round((stoped - created) / 1000, 0) + "sec");
         close();
     }
 
@@ -25,6 +25,7 @@ self.addEventListener('message', function (e) {
         worker_id = e.data.id;
         Global_data = e.data.data;
         fragment_id = e.data.fragment_id;
+        debug('worker ' + worker_id + ' init');
         return;
     }
     if (e.data.channel == 'run') {
@@ -48,7 +49,9 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
 
     //availableEngines = [availableEngines[8]];
     for (var i in availableEngines) {
-        if(Global_status == 'stop') {return null;}
+        if (Global_status == 'stop') {
+            return null;
+        }
         var engine = availableEngines[i];
 
         // Get Engine ISP / Thrust
@@ -57,11 +60,24 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         var ISP = curveData.ISP;
         var Thrust = curveData.Thrust;
 
+        // Add decoupler mass
+        var decoupler = {};
+        decoupler = getDecoupler(cu.size);
+        if(decoupler === null) {
+            decoupler.mass.full = 0;
+            decoupler.name = '';
+        }
+        cu.mass = cu.mass + decoupler.mass.full;
+
+        // Add commandModule if needed
+        var command = {mass: 0, stack:[]};
+        cu.mass = cu.mass + command.mass;
+
         // Prepare Masses values
         var MassEngineFull = engine.mass.full;
         var MassEngineDry = engine.mass.empty;
-        var MstageDry = cu.mass + MassEngineDry;
-        var MstageFull = cu.mass + MassEngineFull;
+        var MstageDry = cu.mass + MassEngineDry + command.mass + decoupler.mass.full;
+        var MstageFull = cu.mass + MassEngineFull + command.mass + decoupler.mass.full;
 
         // calculate Fuel mass for the needed for Dv
         var DvFactor = Math.exp(targetDv / (ISP * SOI.Go));
@@ -69,78 +85,81 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         // Calcul of Mcarbu => OK ! Verified 10times
 
         // If Engine contain fuel ( Booster or TwinBoar
+        var EngineFuelMass = 0;
         if (MassEngineDry < MassEngineFull) {
-            Mcarbu -= (MassEngineFull - MassEngineDry);
+            EngineFuelMass = MassEngineFull - MassEngineDry;
+            Mcarbu -= EngineFuelMass;
         }
 
+        var no_tank = false;
         // Manage solid Boosters
         if (engine.modes.SolidBooster) {
             if (Mcarbu > 0) {
                 // not enough solid fuel in engine 
                 continue;
             } else {
-                // it's a viable option
+                // Booster get enougth dv
+                no_tank = true;
             }
         }
 
-        // Add decoupler mass
-        var decoupler = getDecoupler(cu.size);
-        var decouplerMass = (decoupler == null) ? 0 : decoupler.mass.full;
-        cu.mass = cu.mass + decouplerMass;
+        var TankSolution = {};
+        if (no_tank === false) {
+            // Get Tank configuration
+            var stageDataForTank = {
+                // Engine informations
+                engine: engine,
+                ISP: ISP,
+                thrust: Thrust,
 
-        // Add commandModule if needed
-        var command = {mass : 0};
-        var commandMass = (decoupler == null) ? 0 : command.mass;
-        cu.mass = cu.mass + commandMass;
+                // Performance Target
+                cu: cu,
+                targetDv: targetDv,
 
-        // Get Tank configuration
-        var stageDataForTank = {
-            // Engine informations
-            engine: engine,
-            ISP: ISP,
-            thrust: Thrust,
+                // Constraints
+                twr: twr,
+                Go: SOI.Go
+            };
 
-            // Performance Target
-            cu: cu,
-            targetDv: targetDv,
-
-            // Constraints
-            twr: twr,
-            Go: SOI.Go
-        };
-
-        //console.log('###########');
-        var TankSolution = getFuelTankSolution(stageDataForTank);
-        if(TankSolution == null) {
-            continue;
+            TankSolution = getFuelTankSolution(stageDataForTank);
+            if (TankSolution === null) {
+                continue;
+            }
+            //console.log('###########');
+            //console.log(stageDataForTank);
+            //console.log(TankSolution);
+            //console.log('###########');
+        } else {
+            TankSolution.mFuel = 0;
+            TankSolution.mDry = 0;
+            TankSolution.solution = [];
         }
-        //console.log(TankSolution);
-        //console.log('###########');
 
         // Make stage caracterics
         MstageFull = cu.mass + MassEngineFull + TankSolution.mFuel + TankSolution.mDry;
         MstageDry = cu.mass + MassEngineDry + TankSolution.mDry;
-
+        var stageFuelMass = TankSolution.mFuel + EngineFuelMass;
         var TwrFull = Thrust / MstageFull / SOI.Go;
         var TwrDry = Thrust / MstageDry / SOI.Go;
-        var burnDuration = TankSolution.mFuel * ISP * SOI.Go / Thrust;
+        var burnDuration = stageFuelMass * ISP * SOI.Go / Thrust;
         var Dv = ISP * SOI.Go * Math.log(MstageFull / MstageDry);
-
+        
         var stage = {
             decoupler: decoupler.name,
-            commandModule: command,
+            commandModule: command.stack,
             tanks: TankSolution.solution,
             engine: engine.name,
-            
-            mcarbu: round(TankSolution.mFuel, 4),
+
+            mcarbu: stageFuelMass,
             twr: {
                 min: round(TwrFull),
                 max: round(TwrDry)
             },
             totalMass: round(MstageFull, 4),
             burn: round(burnDuration, 1),
-            stageDv: Dv
-            
+            stageDv: Dv,
+            targetDv: targetDv,
+
         };
         var output = {
             stages: [stage],
@@ -179,9 +198,4 @@ function getEngineCurveDateForAtm(engineCaracts, AtmPressur) {
             return point;
         }
     }
-}
-
-function testTwr(Thrust, Mass, target, Go) {
-    var Twr = Thrust / Mass / Go;
-    return(Twr > target.min && Twr < target.max);
 }

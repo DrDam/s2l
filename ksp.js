@@ -148,7 +148,7 @@ var DEBUG = {};
         // Binding Stop button
         $('#stop').click(function () {
             for (var i in masters) {
-                if (masters[i] != null) {
+                if (masters[i] !== undefined) {
                     masters[i].postMessage({channel: "stop"});
                 }
             }
@@ -277,19 +277,17 @@ var DEBUG = {};
 
         // Add a row in table
         function updateDom(data) {
+            result_id++;
+            data.id = result_id;
             debug('###################');
             debug('output to table');
             debug(data);
             debug('###################');
-            result_id++;
             var mass = data.totalMass;
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
             var stages = printStages(data.stages, mass, dv);
             resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
-
-
-
         }
 
         function printStages(stages, fullMass, fullDv) {

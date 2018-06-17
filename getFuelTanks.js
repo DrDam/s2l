@@ -1,6 +1,3 @@
-
-
-
 /********************/
 /** Tank selection **/
 /********************/
@@ -16,6 +13,9 @@ function getFuelTankSolution(stageData) {
     var cu_size = stageData.cu.size;
     var engine_size = stageData.engine.stackable.top;
     var Tanks = preSelectTanks(EnginesNeeded);
+    var Adapters = Global_data.parts.adapters;
+    var localparts = mergeArray(Tanks, Adapters);
+
     var targetSizes = {
         top: cu_size,
         bottom: engine_size
@@ -23,10 +23,12 @@ function getFuelTankSolution(stageData) {
     // 1) make all possible assembly
     var nbTanks;
     for (nbTanks = 1; nbTanks <= Global_data.simu.maxTanks; nbTanks++) {
-        if(Global_status == 'stop') {return null;}
+        if (Global_status == 'stop') {
+            return null;
+        }
         // Make a possible Assembly
-        var localBest = getValideAssembly(stageData, targetSizes, Tanks, nbTanks);
-        if(localBest !== null) {
+        var localBest = getValideAssembly(stageData, targetSizes, localparts, nbTanks);
+        if (localBest !== null) {
             //console.log(localBest);
             // 3) select best assembly => less OverFlow
             if (localBest.overflow < bestOverflow) {
@@ -35,7 +37,7 @@ function getFuelTankSolution(stageData) {
             }
         }
     }
-    
+
     return (bestOverflow < 999) ? bestSolution : null;
 }
 
@@ -52,7 +54,7 @@ function preSelectTanks(EnginesNeeded) {
             continue;
         }
         // No multi engine
-        if(tank.id == 'Size4_EngineAdapter_01') {
+        if (tank.id == 'Size4_EngineAdapter_01') {
             continue;
         }
 
@@ -70,50 +72,91 @@ function getRessourcesKey(obj) {
 }
 
 // Create a possible Assembly and validate it
-function getValideAssembly(stageData, targetSizes, availableTanks, nbTanks = 1, stack = []) {
+function getValideAssembly(stageData, targetSizes, localParts, nbTanks = 1, stack = []) {
     var bestSolution = {};
     var bestOverflow = 999;
 
-    for (var i in availableTanks) {
-        if(Global_status == 'stop') {return null;}
-        var current = availableTanks[i];
-        var localStack = clone(stack);
-        localStack.push(current);
-        var DvOverFlow = getStackOverflow(localStack, stageData);
- 
-        // If stack provide enought fuel
-        if (DvOverFlow !== null && bestOverflow > DvOverFlow) {
-            var OrderedStack = organizeTanks(localStack, targetSizes.top, targetSizes.bottom);
-            // No organisation found with or without adapters
-            if(OrderedStack === null) {
+    for (var i in localParts) {
+        if (Global_status == 'stop') {
+            return null;
+        }
+        var current = localParts[i];
+
+        // Test if part go on top
+        if (targetSizes.top === current.stackable.top) {
+
+            var localStack = clone(stack);
+            localStack.push(current);
+            var DvOverFlow = getStackOverflow(localStack, stageData);
+
+            // If stack provide enought fuel
+            if (DvOverFlow !== null && bestOverflow > DvOverFlow) {
+
+                // If bottom not feat with engine
+                if (targetSizes.bottom !== current.stackable.bottom) {
+                    var finished = false;
+                    // Find a adapter
+                    for (var j in Global_data.parts.adapters) {
+                        var adapter = Global_data.parts.adapters[j];
+
+                        // Adapter must feat with engin size
+                        if (targetSizes.bottom === adapter.stackable.bottom &&
+                                // Adapter must feat with bottom of last part
+                                current.stackable.bottom === adapter.stackable.top)
+                        {
+                            // Restest overflow
+                            var testStack = clone(localStack);
+                            testStack.push(adapter);
+                            var TestDvOverFlow = getStackOverflow(testStack, stageData);
+                            // If adapter kill best stage => next
+                            if (!(DvOverFlow !== null && bestOverflow > TestDvOverFlow)) {
+                                continue;
+                            } else {
+                                // If adapter don't change best
+                                localStack.push(adapter);
+                                DvOverFlow = TestDvOverFlow;
+                                finished = true;
+                            }
+
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    // If we not found correct adapter, next tank
+                    if (finished !== true) {
+                        continue;
+                    }
+                }
+
+                var composition = {};
+                composition.solution = localStack;
+                composition.overflow = DvOverFlow;
+                var stackdata = getStackMasses(localStack);
+                composition.mFuel = stackdata.Mcarbu;
+                composition.mDry = stackdata.Mdry;
+
+                bestSolution = composition;
+                bestOverflow = DvOverFlow;
+
+                // Test next tank
                 continue;
             }
-            
-            var composition = {};
-            composition.solution = OrderedStack;
-            composition.overflow = DvOverFlow;
-            var stackdata = getStackMasses(OrderedStack);
-            composition.mFuel = stackdata.Mcarbu;
-            composition.mDry = stackdata.Mdry;
 
-            bestSolution = composition;
-            bestOverflow = DvOverFlow;
+            if (nbTanks === 1) {
+                // No other adition tank
+                continue;
+            }
 
-            // Test next tank
-            continue;
-        }
-
-        if (nbTanks == 1) {
-            // No other adition tank
-            continue;
-        }
-        
-        if(nbTanks > 1) {
-            var subComposition = getValideAssembly(stageData, targetSizes, availableTanks, nbTanks-1, localStack);
-            if(subComposition !== null) {
-                if(bestOverflow > subComposition.overflow) {
-                bestSolution = subComposition;
-                bestOverflow = subComposition.overflow;
+            if (nbTanks > 1) {
+                var Sizes = clone(targetSizes);
+                Sizes.top = current.stackable.bottom;
+                var subComposition = getValideAssembly(stageData, Sizes, localParts, nbTanks - 1, localStack);
+                if (subComposition !== null) {
+                    if (bestOverflow > subComposition.overflow) {
+                        bestSolution = subComposition;
+                        bestOverflow = subComposition.overflow;
+                    }
                 }
             }
         }
@@ -159,105 +202,7 @@ function getStackMasses(stack) {
     return {Mdry: Mdry, Mfull: Mfull, Mcarbu: Mfull - Mdry};
 }
 
-
-function organizeTanks(stack, topSize, bottomSize) {
-
-    var newStack = [];
- 
-    // prepare data
-    var Tanks = [];
-    for(var i in stack) {
-        var Tank = {};
-        Tank.id = i;
-        Tank.top = stack[i].stackable.top;
-        Tank.bottom = stack[i].stackable.bottom;
-        Tanks.push(Tank);
-    }
-   
-    // First Try, we try to have a "conique" launcher
-    for(var i in Tanks) {
-        var Tank = Tanks[i];
-        if(transformSizeToOrder(Tank.top) < transformSizeToOrder(topSize)) {
-            return null;
-        }
-        if(transformSizeToOrder(Tank.bottom) > transformSizeToOrder(bottomSize)) {
-            return null;
-        }
-    }
-
-    // Start
-    var currentTop = topSize;
-    var currentBottom = bottomSize;
-    
-    // We first try a "natural" sort
-    var nbTanks;
-    do{
-        nbTanks = Tanks.length;
-        for(var i in Tanks) {
-            var Tank = Tanks[i];
-            if(Tank.top == topSize) {
-                newStack.push(stack[Tank.id]);
-                currentTop = Tank.bottom;
-                // This tank are sorted
-                Tanks.splice(i, 1);
-            }
-        }
-    }
-    // We loop as long as a tank are sorted
-    while(Tanks.length != nbTanks);
-
-    
-    // All tank are sorted
-    if(Tanks.length == 0) {
-        // Find adapters to finalise stack
-        if(currentTop != bottomSize) {
-
-            var adapters = getAdapters(currentTop, bottomSize);
-            if(adapters === null) {
-                return null;
-            }
-            for(var i in adapters) {
-                newStack.push(adapters[i]);
-            }
-        }
-        return newStack;
-    }
-
-    return null;
+function testTwr(Thrust, Mass, target, Go) {
+    var Twr = Thrust / Mass / Go;
+    return(Twr > target.min && Twr < target.max);
 }
-
-
-function transformSizeToOrder(value) {
-        for(var i in Global_data.sizes) {
-          if(value == Global_data.sizes[i].id) {
-            return i;
-        }
-    }
-}
-
-function getAdapters(topSize, bottomSize) {
-    
-    var adapters = [];
-    var top = topSize;
-    var nb_adapters;
-    do {
-        nb_adapters = adapters.length;
-        for(var i in Global_data.parts.adapters) {
-            var adapter = Global_data.parts.adapters[i];
-            if(adapter.stackable.top == top) {
-                adapters.push(adapter);
-                if(adapter.stackable.bottom == bottomSize) {
-                    return adapters;
-                }
-                else {
-                    top = adapter.stackable.bottom;
-                    continue;
-                }
-            }
-        }   
-    }
-    while(adapters.length != nb_adapters);
-
-    //console.log([adapters, topSize, bottomSize]);
-}
-

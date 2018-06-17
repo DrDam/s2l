@@ -1,5 +1,3 @@
-/* exported EXPORTED_LIB */
-
 var Debug = true;
 var debug = function(message) {
     if(Debug === true) {
@@ -20,6 +18,13 @@ function round(number, precision) {
     return Math.round(number * factor) / factor;
 }
 
+function mergeArray(array1, array2) {  
+    var output = clone(array1);
+    for(var i in array2) {
+        output.push(array2[i]);
+    }
+    return output;
+}
 
 // Warn if overriding existing method
 if(Array.prototype.equals)
