@@ -123,7 +123,10 @@ var DEBUG = {};
         $.ajax({
             url: "http://kspapi.drdamlab.net/collection/adapters",
         }).done(function (data) {
-            for (var id in data.adapters) {
+            for (var id in data.adapters) {    
+                if(id == 'largeAdapter2') {
+                    continue;
+                }
                 var adapter = data.adapters[id];
                 adapter.id = id;
                 Parts.adapters.push(adapter);
@@ -279,33 +282,48 @@ var DEBUG = {};
         function updateDom(data) {
             result_id++;
             data.id = result_id;
+            var mass = round(data.totalMass);
+            var nbStages = data.nbStages;
+            var dv = round(data.stageDv, 2);
+            var stages = printStages(data.stages, mass, dv);
             debug('###################');
             debug('output to table');
             debug(data);
             debug('###################');
-            var mass = data.totalMass;
-            var nbStages = data.nbStages;
-            var dv = round(data.stageDv, 2);
-            var stages = printStages(data.stages, mass, dv);
             resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
         }
 
         function printStages(stages, fullMass, fullDv) {
             var output = '';
             for (var i in stages) {
-                var stage = stages[i];
-                stage.stage_id = i;
-                stage.Dv = round(stage.stageDv, 2);
-                stage.FullDv = fullDv;
-                stage.MassLauncher = fullMass;
+                var stage = stages[i];    
+                var stageData = {};
+                
+                stageData.stage_id = i;
+                stageData.stageDv = round(stage.stageDv);
+                stageData.FullDv = round(fullDv);
+                stageData.MassLauncher = round(fullMass);
+                stageData.burn = round(stage.burn);
+                stageData.twrMax = round(stage.twr.max);
+                stageData.twrMin = round(stage.twr.min);
+                stageData.totalMass = round(stage.totalMass);
+                
+                stageData.decoupler = stage.decoupler;
+                stageData.engine = stage.engine;
+                
+                stageData.tanks = [];
                 var tanks = stage.tanks;
-                var tanksNames = [];
                 for (var j in tanks) {
                     var tank = tanks[j];
-                    tanksNames.push({tank_name: tank.name});
+                    stageData.tanks.push({tank_name: tank.name});
                 }
-                stage.tanks = tanksNames;
-                var rendered = Mustache.render(stageTPL, stage);
+                stageData.command = [];
+                var command = stage.commandModule;
+                for (var k in command) {
+                    var part = command[k];
+                    stageData.command.push({part_name: part.name});
+                }
+                var rendered = Mustache.render(stageTPL, stageData);
                 output += rendered;
             }
 

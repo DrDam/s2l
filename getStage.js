@@ -152,11 +152,11 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
 
             mcarbu: stageFuelMass,
             twr: {
-                min: round(TwrFull),
-                max: round(TwrDry)
+                min: TwrFull,
+                max: TwrDry
             },
-            totalMass: round(MstageFull, 4),
-            burn: round(burnDuration, 1),
+            totalMass: MstageFull,
+            burn: burnDuration,
             stageDv: Dv,
             targetDv: targetDv,
 
