@@ -38,7 +38,7 @@ var DEBUG = {};
                 value: item.id,
                 text : item.label
             };
-            if(item.id == 'size2') {
+            if(item.id == 'size1') {
                 data.selected = 'selected';
             }
             $('#sizeCU').append($('<option>', data));
@@ -158,6 +158,9 @@ var DEBUG = {};
 
         // Binding start Button
         $('#param').submit(function (event) {
+            
+            console.log('Start Calculations at ' + new Date());
+            
             event.preventDefault();
             $('#start').prop('disabled', true);
             $('#stop').prop('disabled', false);
@@ -249,16 +252,15 @@ var DEBUG = {};
                     if (result.channel == 'end') {
                         var id_to_kill = result.id;
                         debug('kill ' + id_to_kill);
-                        masters[id_to_kill].terminate();
-                        masters[id_to_kill] = null;
+                        masters[id_to_kill] = undefined;
                         var terminated = true;
                         for (var i in masters) {
-                            if (masters[i] !== null) {
+                            if (masters[i] !== undefined) {
                                 terminated = false;
                             }
                         }
                         if (terminated === true) {
-                            console.log('END Calculations');
+                            console.log('END Calculations at ' + new Date());
                             $('#stop').prop('disabled', true);
                             $('#start').prop('disabled', false);
                         }

@@ -1,9 +1,11 @@
 importScripts('lib.js', 'getFuelTanks.js');
+var created = new Date();
 // Generate 1 stage Rocket
 var worker_id;
 var fragment_id;
 var Global_data = {};
 var Global_status = 'run';
+
 function autostop() {
     debug('worker ' + worker_id + ' stop');
     self.postMessage({channel: 'end', id: worker_id});
@@ -14,6 +16,8 @@ self.addEventListener('message', function (e) {
     if (e.data.channel == 'stop') {
         Global_status = 'stop';
         autostop();
+        var stoped = new Date();
+        debug('worker ' + worker_id + ' stoped after ' + round((stoped - created) / 1000,0) + "sec");
         close();
     }
 

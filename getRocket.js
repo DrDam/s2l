@@ -1,5 +1,5 @@
 importScripts('subworkers.js','lib.js');  
-
+var created = new Date();
 // Generate X stage Rocket
 var worker_id;
 var globalData = {};
@@ -7,6 +7,7 @@ var globalWorkers = [];
 var globalWorkersStatus = [];
 var globalCounter = 0;
 var Global_status = 'run';
+
 function autostop() {
     for (var i in globalWorkersStatus) {
         if (globalWorkersStatus[i] == 1) {
@@ -19,6 +20,7 @@ function autostop() {
 function killMe() {
     debug('worker ' + worker_id + ' send killMe');
     self.postMessage({channel: 'end', id: worker_id});
+    close();
 }
 
 // Communication
@@ -26,6 +28,8 @@ self.addEventListener('message',function(e){
     if (e.data.channel == 'stop') {
         Global_status = 'stop';
         autostop();
+        var stoped = new Date();
+        debug('worker ' + worker_id + ' stoped after ' + round((stoped - created) / 1000,0) + "sec");
         close();
     }
     if (e.data.channel == 'init') {
@@ -60,10 +64,13 @@ function drawMeARocket() {
 
 function makeMultipleStageRocket(localData) {
     // generate DV repartition
+    var step = localData.simu.step;
+    var nbsteps = round(100 / localData.simu.step, 0) -1;
+
     var i;
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < nbsteps; i++) {
         if(Global_status == 'stop') {return null;}
-        var part = (i + 1) * 10 / 100;
+        var part = (i + 1) * step / 100;
         var UpperData = clone(localData);
         UpperData.rocket.dv = round(part * localData.rocket.dv);
         UpperData.rocket.stages = 1;
@@ -79,7 +86,7 @@ function makeMultipleStageRocket(localData) {
                 var result = e.data;
                 if (result.channel == 'end') {
                     debug('worker ' + result.id + ' send killMe');
-                    globalWorkers[result.id].terminate();
+                    globalWorkers[result.id] = undefined;
                     globalWorkersStatus[result.id] = 0;
                     if (Object.values(globalWorkersStatus).join('') == 0) {
                         killMe();
@@ -105,7 +112,7 @@ function makeMultipleStageRocket(localData) {
                             var result = e.data;
                             if (result.channel == 'end') {
                                 debug('worker ' + result.id + ' send killMe');
-                                globalWorkers[result.id].terminate();
+                                globalWorkers[result.id] = undefined;
                                 globalWorkersStatus[result.id] = 0;
                                 if (Object.values(globalWorkersStatus).join('') == 0) {
                                     killMe();
@@ -169,11 +176,11 @@ function makeSingleStageRocket(localData) {
                 //debug(worker_id);
                 //debug(result);
                 //debug('******************');
-                postMessage({channel: 'result', output: result.output, id: worker_id});
+                self.postMessage({channel: 'result', output: result.output, id: worker_id});
             }
             if (result.channel == 'end') {
                 debug('worker ' + result.id + ' send killMe');
-                globalWorkers[result.id].terminate();
+                globalWorkers[result.id] = undefined;
                 globalWorkersStatus[result.id] = 0;
                 if (Object.values(globalWorkersStatus).join('') == 0) {
                     killMe();
