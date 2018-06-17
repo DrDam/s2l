@@ -4,9 +4,9 @@
 
 v0.0.10
 - Optimize & correct TankStack generator
-- Add adaptaters ( first try)
+- Add adaptaters
 - Reworking table
-- optisations
+- optizations
 
 v0.0.9
 - Add decouplers + styling table

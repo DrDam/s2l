@@ -1,4 +1,6 @@
 
+/* Table */
+
 #results {
   width: 100%;
   margin-top: 10px;
@@ -41,4 +43,22 @@
   height: auto !important;
   padding: 5px 10px !important;
   border-top: 1px solid black;
+}
+
+/* Details */
+
+.stagesDetails {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.stage {
+    width: auto;
+    float: left;  
+}
+
+.caracts ul,
+.composition .general,
+.composition .fuelstack {
+    text-align: left;
 }

@@ -1,14 +1,21 @@
-<hr>
-<div class="stage" id="stage_{{stage_id}}">
-    <div>Dv : {{stageDv}}m/s / {{FullDv}}m/s</div>
-    <div>Burn time : {{burn}}s</div>
-    <div>TWR : {{twrMin}} - {{twrMax}}</div>
-    <div>Mass : {{totalMass}}t / {{MassLauncher}}t</div>
-    <div>Stage Composition : 
+<div class="stage" id="{{resultId}}_stage_{{stage_id}}">
+    
+    <h3> Stage {{stage_id}} </h3>
+    
+    <div class="caracts"> Stage Caracteristics 
         <ul>
+            <li><label>Dv :</label>  {{stageDv}}m/s / {{FullDv}}m/s</li>
+            <li><label>Burn time :</label> {{burn}}s</li>       
+            <li><label>TWR :</label> {{twrMin}} - {{twrMax}}</li>
+            <li><label>Mass :</label> {{totalMass}}t / {{MassLauncher}}t</li>
+
+        </ul>
+    </div>
+    <div class="composition"> Stage Composition 
+        <ul class="general">
             <li>on top decoupler : {{decoupler}}</li>
             <li>Fuel Stack : 
-                <ul>
+                <ul class="fuelstack">
                     {{#tanks}}
                         <li>{{tank_name}}</li>
                     {{/tanks}}    

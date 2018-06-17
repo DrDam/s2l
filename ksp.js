@@ -1,4 +1,3 @@
-var DEBUG = {};
 // Jquery
 (function ($) {
     $(document).ready(function () {
@@ -31,7 +30,6 @@ var DEBUG = {};
             { id:'mk2', label:'Mk2'},
             { id:'mk3', label:'Mk3'},
         ];
-        DEBUG.Sizes = Sizes;
         // Populate CU size select
         $.each(Sizes, function (i, item) {
             var data = { 
@@ -147,6 +145,10 @@ var DEBUG = {};
         $.get('stages.html.tpl', function (data) {
             stageTPL = data;
         }, 'text');
+        var cuTPL = null;
+        $.get('cu.html.tpl', function (data) {
+            cuTPL = data;
+        }, 'text');
 
         // Binding Stop button
         $('#stop').click(function () {
@@ -224,6 +226,8 @@ var DEBUG = {};
                 sizes: Sizes
             };
 
+            var cuHTML = makeCuHtml(CU, Sizes);
+
             debug('###################');
             debug('input data');
             debug(computationData);
@@ -251,7 +255,8 @@ var DEBUG = {};
                     var result = e.data;
                     if (result.channel == 'result') {
                         var dataToTable = e.data.output;
-                        dataToTable.cumass = computationData.cu.mass;
+                        dataToTable.cu = computationData.cu;
+                        dataToTable.cuHTML = cuHTML;
                         updateDom(dataToTable);
                     }
                     if (result.channel == 'end') {
@@ -283,26 +288,29 @@ var DEBUG = {};
         // Add a row in table
         function updateDom(data) {
             result_id++;
-            data.id = result_id;
-            var mass = round(data.totalMass + data.cumass);
+            var mass = round(data.totalMass + data.cu.mass);
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
-            var stages = printStages(data.stages, mass, dv);
-            var Cu_part = round(round(data.cumass / mass) * 100, 0);
+            var Cu_part = round(round(data.cu.mass / mass) * 100, 0);
+            
+            var StagesHTML = '<div class="stagesDetails">';
+            StagesHTML += data.cuHTML;
+            StagesHTML += printStages(data.stages, mass, dv, result_id);
+            StagesHTML += "</div>";
             debug('###################');
             debug('output to table');
             debug(data);
             debug('###################');
-            resultTable.row.add([result_id, nbStages, mass, Cu_part,dv, stages]).draw();
+            resultTable.row.add([result_id, nbStages, mass, Cu_part,dv, StagesHTML]).draw();
         }
 
-        function printStages(stages, fullMass, fullDv) {
+        function printStages(stages, fullMass, fullDv, result_id) {
             var output = '';
             for (var i in stages) {
                 var stage = stages[i];    
                 var stageData = {};
-                
-                stageData.stage_id = i;
+                stageData.resultId = result_id;
+                stageData.stage_id = parseInt(i)+1;
                 stageData.stageDv = round(stage.stageDv);
                 stageData.FullDv = round(fullDv);
                 stageData.MassLauncher = round(fullMass);
@@ -330,6 +338,24 @@ var DEBUG = {};
                 output += rendered;
             }
 
+            return output;
+        }
+        
+        function makeCuHtml(cu, sizes) {
+            var output = '';
+            
+            var cuData = {};
+            cuData.mass = cu.mass;
+            cuData.size = '';
+            for( var i in sizes) {
+                if(sizes[i].id == cu.size) {
+                    cuData.size = sizes[i].label;
+                }
+            }
+            
+            var rendered = Mustache.render(cuTPL, cuData);
+            output += rendered;
+            
             return output;
         }
 
