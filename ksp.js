@@ -176,11 +176,11 @@ var DEBUG = {};
                     language: {
                         emptyTable: "No configuration found from your specifications"
                     },
-                    order: [[2, "asc"]],
+                    order: [[3, "desc"]],
                     columnDefs: [
                         {width: 50, targets: 0},
-                        {width: 100, targets: [1]},
-                        {width: 200, targets: [2, 3]}
+                        {width: 100, targets: [1, 2]},
+                        {width: 200, targets: [3, 4]}
 
                     ],
                     fixedColumns: true
@@ -214,7 +214,7 @@ var DEBUG = {};
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
 
-            var data = {
+            var computationData = {
                 SOI: SOI,
                 rocket: rocket,
                 cu: CU,
@@ -226,14 +226,14 @@ var DEBUG = {};
 
             debug('###################');
             debug('input data');
-            debug(data);
+            debug(computationData);
             debug('###################');
 
             var nbStage;
             result_id = 0;
             masters = [];
             // Create workers
-            for (nbStage = 0; nbStage < data.rocket.stages; nbStage++) {
+            for (nbStage = 0; nbStage < computationData.rocket.stages; nbStage++) {
                 var w = new Worker("getRocket.js");
                 var master_id = "master-" + nbStage;
                 masters[master_id] = w;
@@ -242,7 +242,7 @@ var DEBUG = {};
             var nbStages = 0;
             for (var id in masters) {
                 var nbstages = nbStages + 1;
-                var master_data = clone(data);
+                var master_data = clone(computationData);
                 master_data.rocket.stages = nbstages;
 
                 masters[id].postMessage({channel: "init", id: id, data: master_data});
@@ -250,7 +250,9 @@ var DEBUG = {};
                 masters[id].addEventListener('message', function (e) {
                     var result = e.data;
                     if (result.channel == 'result') {
-                        updateDom(e.data.output);
+                        var dataToTable = e.data.output;
+                        dataToTable.cumass = computationData.cu.mass;
+                        updateDom(dataToTable);
                     }
                     if (result.channel == 'end') {
                         var id_to_kill = result.id;
@@ -282,15 +284,16 @@ var DEBUG = {};
         function updateDom(data) {
             result_id++;
             data.id = result_id;
-            var mass = round(data.totalMass);
+            var mass = round(data.totalMass + data.cumass);
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
             var stages = printStages(data.stages, mass, dv);
+            var Cu_part = round(round(data.cumass / mass) * 100, 0);
             debug('###################');
             debug('output to table');
             debug(data);
             debug('###################');
-            resultTable.row.add([result_id, nbStages, mass, dv, stages]).draw();
+            resultTable.row.add([result_id, nbStages, mass, Cu_part,dv, stages]).draw();
         }
 
         function printStages(stages, fullMass, fullDv) {
