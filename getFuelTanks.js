@@ -1,10 +1,17 @@
+
+
+
+/********************/
+/** Tank selection **/
+/********************/
+
 function getFuelTankSolution(stageData) {
 
     var bestSolution = {};
     var bestOverflow = 999;
-
+    var EnginesNeeded = {};
     for (var i in stageData.engine.modes) {
-        var EnginesNeeded = stageData.engine.modes[i][0].conso.proportions;
+        EnginesNeeded = stageData.engine.modes[i][0].conso.proportions;
     }
     var cu_size = stageData.cu.size;
     var engine_size = stageData.engine.stackable.top;
@@ -19,7 +26,7 @@ function getFuelTankSolution(stageData) {
         if(Global_status == 'stop') {return null;}
         // Make a possible Assembly
         var localBest = getValideAssembly(stageData, targetSizes, Tanks, nbTanks);
-        if(localBest != null) {
+        if(localBest !== null) {
             //console.log(localBest);
             // 3) select best assembly => less OverFlow
             if (localBest.overflow < bestOverflow) {
@@ -75,10 +82,10 @@ function getValideAssembly(stageData, targetSizes, availableTanks, nbTanks = 1, 
         var DvOverFlow = getStackOverflow(localStack, stageData);
  
         // If stack provide enought fuel
-        if (DvOverFlow != null && bestOverflow > DvOverFlow) {
+        if (DvOverFlow !== null && bestOverflow > DvOverFlow) {
             var OrderedStack = organizeTanks(localStack, targetSizes.top, targetSizes.bottom);
             // No organisation found with or without adapters
-            if(OrderedStack == null) {
+            if(OrderedStack === null) {
                 continue;
             }
             
@@ -103,7 +110,7 @@ function getValideAssembly(stageData, targetSizes, availableTanks, nbTanks = 1, 
         
         if(nbTanks > 1) {
             var subComposition = getValideAssembly(stageData, targetSizes, availableTanks, nbTanks-1, localStack);
-            if(subComposition != null) {
+            if(subComposition !== null) {
                 if(bestOverflow > subComposition.overflow) {
                 bestSolution = subComposition;
                 bestOverflow = subComposition.overflow;
@@ -144,7 +151,7 @@ function getStackMasses(stack) {
     // Get Mass as 1 tank
     var Mfull = 0;
     var Mdry = 0;
-    for (i in stack) {
+    for (var i in stack) {
         var tank = stack[i];
         Mfull += tank.mass.full;
         Mdry += tank.mass.empty;
@@ -183,8 +190,9 @@ function organizeTanks(stack, topSize, bottomSize) {
     var currentBottom = bottomSize;
     
     // We first try a "natural" sort
+    var nbTanks;
     do{
-        var nbTanks = Tanks.length;
+        nbTanks = Tanks.length;
         for(var i in Tanks) {
             var Tank = Tanks[i];
             if(Tank.top == topSize) {
@@ -198,13 +206,6 @@ function organizeTanks(stack, topSize, bottomSize) {
     // We loop as long as a tank are sorted
     while(Tanks.length != nbTanks);
 
-    // If it rest some tanks
-    var list_tops = [];
-    if(Tanks.length != 0) {
-        for(var i in Tanks) {
-            list_tops.push(Tanks[i].top)
-        }
-    }
     
     // All tank are sorted
     if(Tanks.length == 0) {
@@ -212,7 +213,7 @@ function organizeTanks(stack, topSize, bottomSize) {
         if(currentTop != bottomSize) {
 
             var adapters = getAdapters(currentTop, bottomSize);
-            if(adapters == null) {
+            if(adapters === null) {
                 return null;
             }
             for(var i in adapters) {
@@ -225,10 +226,6 @@ function organizeTanks(stack, topSize, bottomSize) {
     return null;
 }
 
-function makeSubStack() {
-    
-}
-
 
 function transformSizeToOrder(value) {
         for(var i in Global_data.sizes) {
@@ -238,12 +235,13 @@ function transformSizeToOrder(value) {
     }
 }
 
-function getAdapters(topSize, bottomSize, null_if_not_found = false) {
+function getAdapters(topSize, bottomSize) {
     
     var adapters = [];
     var top = topSize;
+    var nb_adapters;
     do {
-        var nb_adapters = adapters.length;
+        nb_adapters = adapters.length;
         for(var i in Global_data.parts.adapters) {
             var adapter = Global_data.parts.adapters[i];
             if(adapter.stackable.top == top) {
@@ -258,7 +256,7 @@ function getAdapters(topSize, bottomSize, null_if_not_found = false) {
             }
         }   
     }
-    while(adapters.length != nb_adapters)
+    while(adapters.length != nb_adapters);
 
     //console.log([adapters, topSize, bottomSize]);
 }

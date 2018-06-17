@@ -1,3 +1,5 @@
+/* exported EXPORTED_LIB */
+
 var Debug = true;
 var debug = function(message) {
     if(Debug === true) {
@@ -10,7 +12,10 @@ function clone(obj) {
     return copy;
 }
 
-function round(number, precision = 2) {
+function round(number, precision) {
+    if(precision === undefined) {
+        precision = 2;
+    }
     var factor = Math.pow(10, precision);
     return Math.round(number * factor) / factor;
 }
@@ -42,6 +47,6 @@ Array.prototype.equals = function (array) {
         }           
     }       
     return true;
-}
+};
 // Hide method from for-in loops
 Object.defineProperty(Array.prototype, "equals", {enumerable: false});

@@ -1,5 +1,4 @@
-importScripts('lib.js');
-importScripts('getFuelTanks.js');
+importScripts('lib.js', 'getFuelTanks.js');
 // Generate 1 stage Rocket
 var worker_id;
 var fragment_id;
@@ -86,7 +85,6 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         cu.mass = cu.mass + decouplerMass;
 
         // Add commandModule if needed
-        var decoupler = getDecoupler(cu.size);
         var command = {mass : 0};
         var commandMass = (decoupler == null) ? 0 : command.mass;
         cu.mass = cu.mass + commandMass;
@@ -116,8 +114,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         //console.log('###########');
 
         // Make stage caracterics
-        var MstageFull = cu.mass + MassEngineFull + TankSolution.mFuel + TankSolution.mDry;
-        var MstageDry = cu.mass + MassEngineDry + TankSolution.mDry;
+        MstageFull = cu.mass + MassEngineFull + TankSolution.mFuel + TankSolution.mDry;
+        MstageDry = cu.mass + MassEngineDry + TankSolution.mDry;
 
         var TwrFull = Thrust / MstageFull / SOI.Go;
         var TwrDry = Thrust / MstageDry / SOI.Go;

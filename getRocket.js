@@ -2,13 +2,13 @@ importScripts('subworkers.js','lib.js');
 
 // Generate X stage Rocket
 var worker_id;
-var globalData = {}
+var globalData = {};
 var globalWorkers = [];
 var globalWorkersStatus = [];
 var globalCounter = 0;
 var Global_status = 'run';
 function autostop() {
-    for (i in globalWorkersStatus) {
+    for (var i in globalWorkersStatus) {
         if (globalWorkersStatus[i] == 1) {
             var worker = globalWorkers[i];
             worker.postMessage({channel: "stop"});
@@ -75,7 +75,7 @@ function makeMultipleStageRocket(localData) {
         for (var i in simpleWorkers) {
             simpleWorkers[i].postMessage({channel: "init", id: i, fragment_id: counter, data: UpperData});
             simpleWorkers[i].postMessage({channel: "run"});
-            simpleWorkers[i].addEventListener('message',function(e){
+            simpleWorkers[i].addEventListener('message', function(e) {
                 var result = e.data;
                 if (result.channel == 'end') {
                     debug('worker ' + result.id + ' send killMe');
@@ -134,7 +134,7 @@ function makeMultipleStageRocket(localData) {
                                     totalMass: total_mass,
                                     burn: burn,
                                     stageDv: total_dv,
-                                }
+                                };
                                //debug('******************');
                                //debug(worker_id);
                                //debug(output);
@@ -190,7 +190,7 @@ function generateWorkers(type, nb) {
     var localWorkers = [];
     var i = 0;
     while (i < nb) {
-        w = new Worker(type + ".js");
+        var w = new Worker(type + ".js");
         var globalId = worker_id + '--' + type + '--' + globalCounter;
         //debug('Generate woker ' + globalId);
         localWorkers[globalId] = w;

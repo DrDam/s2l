@@ -1,4 +1,4 @@
-DEBUG = {};
+var DEBUG = {};
 // Jquery
 (function ($) {
     $(document).ready(function () {
@@ -69,7 +69,7 @@ DEBUG = {};
                     $(this).prop('disabled', false);
                 });
             }
-        }
+        };
 
         // Load Engines
         $.ajax({
@@ -253,11 +253,11 @@ DEBUG = {};
                         masters[id_to_kill] = null;
                         var terminated = true;
                         for (var i in masters) {
-                            if (masters[i] != null) {
+                            if (masters[i] !== null) {
                                 terminated = false;
                             }
                         }
-                        if (terminated == true) {
+                        if (terminated === true) {
                             console.log('END Calculations');
                             $('#stop').prop('disabled', true);
                             $('#start').prop('disabled', false);
@@ -315,7 +315,7 @@ DEBUG = {};
         // See Details
         $('#results').on('click', 'tbody td', function () {
             $(this).parent().find("td:last-child").toggleClass("show");
-        })
+        });
 
     });
 })(jQuery);

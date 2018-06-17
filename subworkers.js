@@ -87,7 +87,7 @@
         var envelope = {
           _from: event.data.id,
           message: e.data
-        }
+        };
         event.target.postMessage(envelope);
       });
       allWorkers[event.data.id] = worker;
@@ -98,7 +98,7 @@
     passMessage: function(event){
       allWorkers[event.data.id].postMessage(event.data.message);
     }
-  }
+  };
   var messageRecieved = function(event){
     if (event.data._subworker){
       cmds[event.data.cmd](event);
