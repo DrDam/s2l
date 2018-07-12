@@ -201,8 +201,3 @@ function getStackMasses(stack) {
     }
     return {Mdry: Mdry, Mfull: Mfull, Mcarbu: Mfull - Mdry};
 }
-
-function testTwr(Thrust, Mass, target, Go) {
-    var Twr = Thrust / Mass / Go;
-    return(Twr > target.min && Twr < target.max);
-}

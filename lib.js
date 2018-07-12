@@ -26,6 +26,11 @@ function mergeArray(array1, array2) {
     return output;
 }
 
+function testTwr(Thrust, Mass, target, Go) {
+    var Twr = Thrust / Mass / Go;
+    return(Twr > target.min && Twr < target.max);
+}
+
 // Warn if overriding existing method
 if(Array.prototype.equals)
     console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");

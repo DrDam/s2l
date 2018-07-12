@@ -84,14 +84,20 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         var Mcarbu = (DvFactor - 1) * MstageDry;
         // Calcul of Mcarbu => OK ! Verified 10times
 
-        // If Engine contain fuel ( Booster or TwinBoar
+        var no_tank = false;
+        
+        // If Engine contain fuel ( Booster or TwinBoar )
         var EngineFuelMass = 0;
         if (MassEngineDry < MassEngineFull) {
             EngineFuelMass = MassEngineFull - MassEngineDry;
             Mcarbu -= EngineFuelMass;
+            // If onboard fuel are suffisant
+            if(Mcarbu < 0) {
+                Mcarbu = 0;
+                no_tank = true;
+            }
         }
-
-        var no_tank = false;
+        
         // Manage solid Boosters
         if (engine.modes.SolidBooster) {
             if (Mcarbu > 0) {
@@ -103,6 +109,11 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             }
         }
 
+        // Get Out engines where Mcarbu outrise twr
+        if (!testTwr(Thrust, MstageFull + Mcarbu, twr, SOI.Go)) {
+            continue;
+        }
+        
         var TankSolution = {};
         if (no_tank === false) {
             // Get Tank configuration
