@@ -2,6 +2,10 @@
 # Changelog #
 #############
 
+v0.0.11
+- Optimization of calculation
+- Optimization force stop
+
 v0.0.10
 - Optimize & correct TankStack generator
 - Add adaptaters

@@ -291,7 +291,7 @@
             var mass = round(data.totalMass + data.cu.mass);
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
-            var Cu_part = round(round(data.cu.mass / mass) * 100, 0);
+            var Cu_part = round(round(data.cu.mass / mass) * 100, 2);
             
             var StagesHTML = '<div class="stagesDetails">';
             StagesHTML += data.cuHTML;

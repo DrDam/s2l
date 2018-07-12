@@ -7,8 +7,10 @@ var Global_data = {};
 var Global_status = 'run';
 
 function autostop() {
-    debug('worker ' + worker_id + ' stop');
     self.postMessage({channel: 'end', id: worker_id});
+    var stopped = new Date();
+    debug('worker ' + worker_id + ' stopped after ' + round((stopped - created) / 1000, 0) + "sec");
+    close();
 }
 
 // Communication
@@ -16,9 +18,6 @@ self.addEventListener('message', function (e) {
     if (e.data.channel == 'stop') {
         Global_status = 'stop';
         autostop();
-        var stoped = new Date();
-        debug('worker ' + worker_id + ' stoped after ' + round((stoped - created) / 1000, 0) + "sec");
-        close();
     }
 
     if (e.data.channel == 'init') {
@@ -64,6 +63,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         var decoupler = {};
         decoupler = getDecoupler(cu.size);
         if(decoupler === null) {
+            decoupler = {};
+            decoupler.mass = {};
             decoupler.mass.full = 0;
             decoupler.name = '';
         }

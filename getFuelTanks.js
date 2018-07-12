@@ -3,7 +3,10 @@
 /********************/
 
 function getFuelTankSolution(stageData) {
-
+    if (Global_status == 'stop') {
+        return null;
+    }
+    
     var bestSolution = {};
     var bestOverflow = 999;
     var EnginesNeeded = {};
@@ -45,6 +48,9 @@ function getFuelTankSolution(stageData) {
 function preSelectTanks(EnginesNeeded) {
     var SelectedTanks = [];
     for (var i in Global_data.parts.fuelTanks) {
+        if (Global_status == 'stop') {
+            return null;
+        }
         var tank = Global_data.parts.fuelTanks[i];
 
         // Filters tanks by ressources
@@ -97,6 +103,9 @@ function getValideAssembly(stageData, targetSizes, localParts, nbTanks = 1, stac
                     var finished = false;
                     // Find a adapter
                     for (var j in Global_data.parts.adapters) {
+                        if (Global_status == 'stop') {
+                            return null;
+                        }
                         var adapter = Global_data.parts.adapters[j];
 
                         // Adapter must feat with engin size
