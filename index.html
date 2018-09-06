@@ -17,7 +17,7 @@
 <body>
 
     <h1>Draw me a launcher</h1>
-    <p>v0.0.11</p>
+    <p>v0.0.12</p>
     <a href="plan.txt" target="_blank">developpement plan</a>
     <a href="changelog.txt" target="_blank">changelog</a>    <br>
     <button id="readme_button" title="Purpose" type="button">Purpose & Actual Limitation</button>
@@ -33,13 +33,13 @@
     
     <hr>
     <form id='param'>
-    <label>Charge utile</label>
+    <label>Utility Charge</label>
     <ul>
         <li>
-            <label>Masse charge utile (t)</label><input id="Mu" name="Mu" type="text" value="10"/>
+            <label>Utility Charge Mass (t)</label><input id="Mu" name="Mu" type="text" value="10"/>
         </li>
        <li>
-            <label>Diamètre coiffe charge utile souhaité</label>
+            <label>Needed fairing Diametrer for utility charge</label>
             <select id="sizeCU" name="tailleCU">
                 <!-- JS generated -->
             </select>
@@ -48,24 +48,24 @@
     <label>Mission</label>
     <ul>
         <li>
-            <label>Capacité cible du lanceur (m/s)</label><input id="DvCible" name="DvCible" type="text" value="4500"/>
+            <label>Launcher Capacity tageted (m/s)</label><input id="DvCible" name="DvCible" type="text" value="4500"/>
         </li>
     </ul>
-    <label> Lanceur </label>
+    <label> Launcher </label>
     <ul>
         <li>
-            <label>Type de lanceur</label>
+            <label>Launcher Type</label>
             <select id="type" name="type">
-                <option value="mono" selected>Monobloc (BlueOrigin / Falcon9 / Vega)</option>
+                <option value="mono" selected>Monobloc (Saturn V / Falcon9 / Vega)</option>
             </select>
         </li>
         <li>
-            <label>Nombre d'étage maximal</label><input type='text' id='nbStage' name='nbstage' value='2'/>
+            <label>Maximal stage quantity</label><input type='text' id='nbStage' name='nbstage' value='2'/>
         </li>
         <li>
             <label> TWR </label>
-            <label>minimal</label><input id="Tmin" name="Tmin" type="text" value="1.2"/>
-            <label>maximal</label><input id="Tmax" name="Tmax" type="text" value="2.5"/>
+            <label>min</label><input id="Tmin" name="Tmin" type="text" value="1.2"/>
+            <label>max</label><input id="Tmax" name="Tmax" type="text" value="2.5"/>
         </li>
     </ul>
     
@@ -75,7 +75,7 @@
         <label> Simulation </label>
         <ul>
             <li>
-                <label>Worker number</label><input id="nbworker" name="nbworker" type="text" value="1"/>
+                <label>Worker number per multi-theard</label><input id="nbworker" name="nbworker" type="text" value="1"/>
             </li>
             <li>
                 <label>Dv steps (%) for multistage</label><input id="Step" name="Step" type="text" value="10"/>
@@ -86,8 +86,8 @@
         </ul>
     </div>
     <hr>
-    <input type="button" class='action_button' value='Arreter la simulation' id='stop' name='stop'/>
-    <input type="submit" class='action_button' value='Dessines-moi un lanceur' id='start' name='start'/>
+    <input type="button" class='action_button' value='Stop simulation' id='stop' name='stop'/>
+    <input type="submit" class='action_button' value='Draw me a launcher' id='start' name='start'/>
     
 </form>
 
@@ -96,10 +96,10 @@
     <thead>
         <tr>
             <td>id</td>
-            <td>Nb Stages</td>
-            <td>total Mass (Launcher + Cu) (t)</td>
+            <td>Stages count</td>
+            <td>total Mass (Launcher + Utility Charge) (t)</td>
             <td>Mass CU / total Mass (%)</td>
-            <td>total deltaV (m/s)</td>
+            <td>launcher deltaV (m/s)</td>
             <td></td>
         </tr>
     </thead>
