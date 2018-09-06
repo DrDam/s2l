@@ -2,6 +2,9 @@
 # Changelog #
 #############
 
+v0.0.12
+- Foldering sources files
+
 v0.0.11
 - Optimization of calculation
 - Optimization force stop
