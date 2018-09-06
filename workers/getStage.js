@@ -1,4 +1,4 @@
-importScripts('lib.js', 'getFuelTanks.js');
+importScripts('/lib/lib.js', '/workers/getFuelTanks.js');
 var created = new Date();
 // Generate 1 stage Rocket
 var worker_id;

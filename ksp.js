@@ -142,11 +142,11 @@
 
         // Prepare stage templating
         var stageTPL = null;
-        $.get('stages.html.tpl', function (data) {
+        $.get('tpl/stages.html.tpl', function (data) {
             stageTPL = data;
         }, 'text');
         var cuTPL = null;
-        $.get('cu.html.tpl', function (data) {
+        $.get('tpl/cu.html.tpl', function (data) {
             cuTPL = data;
         }, 'text');
 
@@ -238,7 +238,8 @@
             masters = [];
             // Create workers
             for (nbStage = 0; nbStage < computationData.rocket.stages; nbStage++) {
-                var w = new Worker("getRocket.js");
+                var w = new Worker("workers/getRocket.js");
+                
                 var master_id = "master-" + nbStage;
                 masters[master_id] = w;
             }

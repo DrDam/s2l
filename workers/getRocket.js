@@ -1,4 +1,4 @@
-importScripts('subworkers.js','lib.js');  
+importScripts('/lib/subworkers.js','/lib/lib.js');  
 var created = new Date();
 // Generate X stage Rocket
 var worker_id;
@@ -187,7 +187,7 @@ function generateWorkers(type, nb) {
     var localWorkers = [];
     var i = 0;
     while (i < nb) {
-        var w = new Worker(type + ".js");
+        var w = new Worker('/workers/' + type + ".js");
         var globalId = worker_id + '--' + type + '--' + globalCounter;
         //debug('Generate woker ' + globalId);
         localWorkers[globalId] = w;
