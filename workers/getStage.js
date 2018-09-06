@@ -9,7 +9,8 @@ var Global_status = 'run';
 function autostop() {
     self.postMessage({channel: 'end', id: worker_id});
     var stopped = new Date();
-    debug('worker ' + worker_id + ' stopped after ' + round((stopped - created) / 1000, 0) + "sec");
+    Global_data = null;
+    debug.send(worker_id + ' # killMe # ' + round((stopped - created) / 1000, 0) + "sec running");
     close();
 }
 
@@ -24,11 +25,11 @@ self.addEventListener('message', function (e) {
         worker_id = e.data.id;
         Global_data = e.data.data;
         fragment_id = e.data.fragment_id;
-        debug('worker ' + worker_id + ' init');
+        debug.send(worker_id + ' # init');
         return;
     }
     if (e.data.channel == 'run') {
-        debug('start woker ' + worker_id);
+        debug.send(worker_id + ' # run');
         drawMeARocket();
         return;
     }

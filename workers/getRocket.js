@@ -19,13 +19,14 @@ function autostop() {
 
 function killMe() {
     var stopped = new Date();
-    debug('worker ' + worker_id + ' send killMe after ' + round((stopped - created) / 1000,0) + "sec");
+    Global_data = null;
+    debug.send(worker_id + ' # killMe # ' + round((stopped - created) / 1000,0) + "sec running");
     self.postMessage({channel: 'end', id: worker_id});
     close();
 }
 
 function childSendKillMe(child_id) {
-    debug(worker_id + ' recieved : worker ' + child_id + ' send killMe');
+    debug.send(child_id + ' # END');
     globalWorkers[child_id] = undefined;
     globalWorkersStatus[child_id] = '';
     if (Object.values(globalWorkersStatus).join('') == '') {
@@ -42,11 +43,11 @@ self.addEventListener('message',function(e){
     if (e.data.channel == 'init') {
         worker_id = e.data.id;
         globalData = e.data.data;
-        debug('woker ' + worker_id + ' initialized for');
+        debug.send(worker_id + ' #  init');
         return;
     }
     if (e.data.channel == 'run') {
-        debug('start woker ' + worker_id);
+        debug.send(worker_id + ' #  run');
         drawMeARocket();
         return;
     }
@@ -54,17 +55,17 @@ self.addEventListener('message',function(e){
 
 // Processing functions
 function drawMeARocket() {
-    //debug(data);
+    //console.log(data);
 
     // Case 1 : Generate monobloc rocket for specific Dv
     if (globalData.rocket.type == 'mono' && globalData.rocket.stages == 1) {
-        //debug('woker ' + worker_id + ' makeSingleStageRocket');
+        //debug.send(worker_id + ' # makeSingleStageRocket');
         makeSingleStageRocket(globalData);
     }
 
     // Case 1 : Generate monobloc rocket for specific Dv
     if (globalData.rocket.type == 'mono' && globalData.rocket.stages > 1) {
-        //debug('woker ' + worker_id + ' makeMultipleStageRocket');
+        //debug.send(worker_id + ' # makeMultipleStageRocket');
         makeMultipleStageRocket(globalData);
     }
 }
@@ -94,7 +95,7 @@ function makeMultipleStageRocket(localData) {
                     if(Global_status == 'stop') {return null;}
                     // When UpperStage found a solution, 
                     // construct all rest of the launcher
-                    // debug(result);
+                    // console.log(result);
                     var UpperStageData = result.output;
                     var NextData = clone(localData);
                     
@@ -115,9 +116,9 @@ function makeMultipleStageRocket(localData) {
                             if (result2.channel == 'result') {
                                 if(Global_status == 'stop') {return null;}
                                 // If rest of launcher find a solution
-                                //debug(worker_id);
-                                //debug(result);
-                                //debug('******************');
+                                //console.log(worker_id);
+                                //console.log(result);
+                                //console.log('******************');
                                 var output_stages = {};
 
                                 var stages = result2.output.stages;
@@ -129,7 +130,7 @@ function makeMultipleStageRocket(localData) {
                                     output_stages.push(stages[i]);
                                 }
                                 var total_dv =  UpperStageData.stageDv + result2.output.stageDv;
-                                //debug(localData);
+                                //console.log(localData);
                                 var output = {
                                     stages: output_stages,
                                     nbStages: localData.rocket.stages,
@@ -143,10 +144,9 @@ function makeMultipleStageRocket(localData) {
                                 //console.log('******************');
                                 self.postMessage({channel: 'result', output: output, id: worker_id});
                             }
-
-
                         });
                     }
+                    NextData = null;
                 }
             });
             counter++;

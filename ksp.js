@@ -165,6 +165,8 @@
         $('#param').submit(function (event) {
             
             console.log('Start Calculations at ' + new Date());
+            debug.setStart();
+            debug.send('time # Worker Id # Message # ');
             
             event.preventDefault();
             $('#start').prop('disabled', true);
@@ -228,10 +230,10 @@
 
             var cuHTML = makeCuHtml(CU, Sizes);
 
-            debug('###################');
-            debug('input data');
-            debug(computationData);
-            debug('###################');
+            //debug.send('###################');
+            //debug.send('input data');
+            //debug.send(computationData);
+            //debug.send('###################');
 
             var nbStage;
             result_id = 0;
@@ -262,7 +264,7 @@
                     }
                     if (result.channel == 'end') {
                         var id_to_kill = result.id;
-                        debug('kill ' + id_to_kill);
+                        debug.send(id_to_kill + ' # END');
                         masters[id_to_kill] = undefined;
                         var terminated = true;
                         for (var i in masters) {
@@ -275,7 +277,6 @@
                             $('#stop').prop('disabled', true);
                             $('#start').prop('disabled', false);
                         }
-
                     }
                 });
                 nbStages++;
@@ -298,10 +299,10 @@
             StagesHTML += data.cuHTML;
             StagesHTML += printStages(data.stages, mass, dv, result_id);
             StagesHTML += "</div>";
-            debug('###################');
-            debug('output to table');
-            debug(data);
-            debug('###################');
+            //debug.send('###################');
+            //debug.send('output to table');
+            //debug.send(data);
+            //debug.send('###################');
             resultTable.row.add([result_id, nbStages, mass, Cu_part,dv, StagesHTML]).draw();
         }
 
