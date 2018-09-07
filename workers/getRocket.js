@@ -43,11 +43,12 @@ self.addEventListener('message',function(e){
     if (e.data.channel == 'init') {
         worker_id = e.data.id;
         globalData = e.data.data;
-        debug.send(worker_id + ' #  init');
+        debug.setStart(globalData.simu.startTime);
+        debug.send(worker_id + ' # init');
         return;
     }
     if (e.data.channel == 'run') {
-        debug.send(worker_id + ' #  run');
+        debug.send(worker_id + ' # run');
         drawMeARocket();
         return;
     }

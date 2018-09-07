@@ -164,9 +164,10 @@
         // Binding start Button
         $('#param').submit(function (event) {
             
-            console.log('Start Calculations at ' + new Date());
-            debug.setStart();
-            debug.send('time # Worker Id # Message # ');
+            var startTime = new Date();
+            console.log('Start Calculations at ' + startTime);
+            debug.setStart(startTime.getTime());
+            debug.send('Worker Id # Message # ', true);
             
             event.preventDefault();
             $('#start').prop('disabled', true);
@@ -217,7 +218,8 @@
             simu.nbWorker = nbWorkers;
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
-
+            simu.startTime = startTime.getTime();
+            
             var computationData = {
                 SOI: SOI,
                 rocket: rocket,

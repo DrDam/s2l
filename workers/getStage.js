@@ -25,6 +25,7 @@ self.addEventListener('message', function (e) {
         worker_id = e.data.id;
         Global_data = e.data.data;
         fragment_id = e.data.fragment_id;
+        debug.setStart(Global_data.simu.startTime);
         debug.send(worker_id + ' # init');
         return;
     }
