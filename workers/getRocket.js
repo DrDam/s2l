@@ -1,4 +1,9 @@
-importScripts('/lib/subworkers.js','/lib/lib.js');  
+importScripts('/lib/lib.js');  
+if(typeof Worker === 'undefined') {
+    // Load subworker only if browser not support natively
+    importScripts("/lib/subworkers.js");
+}
+
 var created = new Date();
 // Generate X stage Rocket
 var worker_id;
@@ -20,6 +25,8 @@ function autostop() {
 function killMe() {
     var stopped = new Date();
     Global_data = null;
+    globalWorkers = null;
+    globalWorkersStatus = null;
     debug.send(worker_id + ' # killMe # ' + round((stopped - created) / 1000,0) + "sec running");
     self.postMessage({channel: 'end', id: worker_id});
     close();

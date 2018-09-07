@@ -58,7 +58,7 @@
         FuelTypes.O = 'Oxydizer';
         FuelTypes.M = 'MonoPropellant';
         FuelTypes.X = 'XenonGas';
-
+        
         // Reactivate action button when the two collection are loaded
         var loadCollectionValidation = function (type) {
             validationData.push(type);
@@ -131,7 +131,7 @@
             }
             loadCollectionValidation('adapters');
         });
-
+        
 
         //  Workers configuration
         var masters = [];
@@ -226,10 +226,14 @@
                 cu: CU,
                 simu: simu,
                 parts: Parts,
-                fuelTypes: FuelTypes,
-                sizes: Sizes
+          //      fuelTypes: FuelTypes,
+          //      sizes: Sizes
             };
 
+            sessionStorage.setItem('parts', JSON.stringify(Parts));
+  //          windows.sessionStorage.setItem('fuelTypes', JSON.stringify(FuelTypes));
+  //          windows.sessionStorage.setItem('sizes', JSON.stringify(Sizes));
+            
             var cuHTML = makeCuHtml(CU, Sizes);
 
             //debug.send('###################');
