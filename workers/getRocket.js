@@ -1,7 +1,7 @@
-importScripts('/lib/lib.js');  
+importScripts('../lib/lib.js');  
 if(typeof Worker === 'undefined') {
     // Load subworker only if browser not support natively
-    importScripts("/lib/subworkers.js");
+    importScripts("../lib/subworkers.js");
 }
 
 var created = new Date();
@@ -24,7 +24,7 @@ function autostop() {
 
 function killMe() {
     var stopped = new Date();
-    Global_data = null;
+    globalData = null;
     globalWorkers = null;
     globalWorkersStatus = null;
     debug.send(worker_id + ' # killMe # ' + round((stopped - created) / 1000,0) + "sec running");
