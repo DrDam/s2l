@@ -183,7 +183,7 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             nbStages: 1,
             size: engine.stackable.bottom
         };
-        self.postMessage({channel: 'result', output: output, id: worker_id});
+        self.postMessage({channel: 'result', output: output, id: worker_id, data:Global_data});
     }
 }
 

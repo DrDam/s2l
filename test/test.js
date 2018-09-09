@@ -9,8 +9,6 @@ function runLevel2(worker_id, level2_data) {
 
 
 
-setTimeout(function () {
-
 var nb_worker = 40;
 
     var worker_stack = [];
@@ -90,14 +88,11 @@ var nb_worker = 40;
         {a: 69},         
     ];
 
-    for (var j = 0; j < nb_worker; j++) {
-        run(j);
-    }
 
 
 
     function createWorker(worker_id) {
-        var newWorker = new Worker('worker.js');
+        var newWorker = new Worker('test/worker.js');
         newWorker.postMessage({channel: 'create', id: worker_id});
         newWorker.addEventListener('message', function (event) {
             var channel = event.data.channel;
@@ -131,8 +126,12 @@ var nb_worker = 40;
         worker.postMessage({channel: 'run'});
     }
 
+setTimeout(function () {
 
+    for (var j = 0; j < nb_worker; j++) {
+        //run(j);
+    }
+    //console.log(results);
 }, 2000);
 
 
-console.log(results);
