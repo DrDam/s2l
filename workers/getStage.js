@@ -2,7 +2,6 @@ importScripts('../lib/lib.js', 'getFuelTanks.js');
 var created = new Date();
 // Generate 1 stage Rocket
 var worker_id;
-var fragment_id;
 var Global_data = {};
 var Global_status = 'run';
 
@@ -24,7 +23,6 @@ self.addEventListener('message', function (e) {
     if (e.data.channel == 'init') {
         worker_id = e.data.id;
         Global_data = e.data.data;
-        fragment_id = e.data.fragment_id;
         debug.setStart(Global_data.simu.startTime);
         debug.send(worker_id + ' # init');
         return;
@@ -38,11 +36,7 @@ self.addEventListener('message', function (e) {
 
 // Processing functions
 function drawMeARocket() {
-    var fragment_length = Math.ceil(Global_data.parts.engines.length / Global_data.simu.nbWorker);
-    var start = fragment_id * fragment_length;
-    var localengines = Global_data.parts.engines.slice(start, start + fragment_length);
-
-    giveMeASingleStage(localengines, Global_data.rocket.dv, Global_data.rocket.twr, Global_data.cu, Global_data.SOI.kerbin);
+    giveMeASingleStage(Global_data.parts.engines, Global_data.rocket.dv, Global_data.rocket.twr, Global_data.cu, Global_data.SOI.kerbin);
     autostop();
 }
 

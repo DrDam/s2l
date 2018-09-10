@@ -89,10 +89,9 @@ function makeMultipleStageRocket(localData) {
         UpperData.rocket.stages = 1;
 
         // Fire multiple worker testing all engine for last Stage
-        var simpleWorkers = generateWorkers('getStage', localData.simu.nbWorker);
-        var counter = 0;
+        var simpleWorkers = generateWorkers('getStage', 1);
         for (var i in simpleWorkers) {
-            simpleWorkers[i].postMessage({channel: "init", id: i, fragment_id: counter, data: UpperData});
+            simpleWorkers[i].postMessage({channel: "init", id: i, data: UpperData});
             simpleWorkers[i].postMessage({channel: "run"});
             simpleWorkers[i].addEventListener('message',function(e){
                 var result = e.data;
@@ -114,7 +113,7 @@ function makeMultipleStageRocket(localData) {
 
                     var nextWorker = generateWorkers('getRocket', 1);
                     for (var i in nextWorker) {
-                        nextWorker[i].postMessage({channel: "init", id: i, fragment_id: counter, data: NextData});
+                        nextWorker[i].postMessage({channel: "init", id: i, data: NextData});
                         nextWorker[i].postMessage({channel: "run"});
                         nextWorker[i].addEventListener('message',function(e){
                             var result2 = e.data;
@@ -157,7 +156,6 @@ function makeMultipleStageRocket(localData) {
                     NextData = null;
                 }
             });
-            counter++;
         }
     }
 }
@@ -168,10 +166,9 @@ function makeMultipleStageRocket(localData) {
 // Single stage Rocket Case
 function makeSingleStageRocket(localData) {
 
-    var simpleWorkers = generateWorkers('getStage', localData.simu.nbWorker);
-    var counter = 0;
+    var simpleWorkers = generateWorkers('getStage', 1);
     for (var i in simpleWorkers) {
-        simpleWorkers[i].postMessage({channel: "init", id: i, fragment_id: counter, data: localData});
+        simpleWorkers[i].postMessage({channel: "init", id: i, data: localData});
         simpleWorkers[i].postMessage({channel: "run"});
         simpleWorkers[i].addEventListener('message',function(e){
             var result = e.data;
@@ -186,7 +183,6 @@ function makeSingleStageRocket(localData) {
             }
 
         });
-        counter++;
     }
 }
 
