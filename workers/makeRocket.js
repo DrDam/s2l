@@ -36,7 +36,7 @@ function childSendKillMe(child_id) {
     debug.send(worker_id + ' # ' + child_id + 'send killMe');
     GlobalWorkers[child_id] = undefined;
     GlobalWorkersStatus[child_id] = '';
-    if (Object.values(GlobalWorkersStatus).join('') === '') {
+    if (Object.values(GlobalWorkersStatus).join('') == '') {
         killMe();
     }
 }
@@ -44,7 +44,7 @@ function childSendKillMe(child_id) {
 // Send "stop" command to all children and wait theyr are all death to send killme message
 function stopAllChildren() {
     for (var i in GlobalWorkersStatus) {
-        if (GlobalWorkersStatus[i] === 1) {
+        if (GlobalWorkersStatus[i] != '') {
             var worker = GlobalWorkers[i];
             worker.postMessage({channel: "stop"});
         }
@@ -54,20 +54,20 @@ function stopAllChildren() {
 // Communication from parent
 self.addEventListener('message', function (e) {
     // Parent send ALL STOP instruction
-    if (e.data.channel === 'stop') {
+    if (e.data.channel == 'stop') {
         Global_status = 'stop';
         stopAllChildren();
     }
 
     // Parent give ID to the worker
-    if (e.data.channel === 'create') {
+    if (e.data.channel == 'create') {
         worker_id = e.data.id;
         console.log(worker_id + ' # Created #');
         return;
     }
 
     // Parent give Data to the worker
-    if (e.data.channel === 'init') {
+    if (e.data.channel == 'init') {
         Global_data = e.data.data;
         debug.setStart(Global_data.simu.startTime);
         debug.send(worker_id + ' # init #');
@@ -75,7 +75,7 @@ self.addEventListener('message', function (e) {
     }
 
     // Parent sent Start Procesing  instruction
-    if (e.data.channel === 'run') {
+    if (e.data.channel == 'run') {
         debug.send(worker_id + ' # run #');
         makeMeARocket();
         return;
@@ -104,45 +104,33 @@ function makeMeARocket() {
 
 // Single stage Rocket Case
 function makeSingleStageRocket() {
-
-    var simpleWorkers = generateWorkersForSingleStage('getStage', Global_data.simu.nbWorker);
-    var counter = 0;
-    for (var i in simpleWorkers) {
-        simpleWorkers[i].postMessage({channel: "init", id: i, fragment_id: counter, data: Global_data});
-        simpleWorkers[i].postMessage({channel: "run"});
-        simpleWorkers[i].addEventListener('message', function (e) {
-            var result = e.data;
-            if (result.channel === 'result') {
-                //console.log(worker_id);
-                //console.log(result);
-                //console.log('******************');
-                self.postMessage({channel: 'result', output: result.output, id: worker_id, data: result.data});
-            }
-            if (result.channel === 'end') {
-                childSendKillMe(result.id);
-            }
-
-        });
-        counter++;
-    }
-}
-
-// Generation of workers for Single Stage
-function generateWorkersForSingleStage(type, nb) {
-    var localWorkers = [];
-    var i = 0;
-    while (i < nb) {
-        var w = new Worker('/workers/' + type + ".js");
-        var globalId = worker_id + '--' + type + '--' + GlobalCounter;
-        w.postMessage({channel: 'create', id: globalId});
-        //console.log('Generate woker ' + globalId);
-        localWorkers[globalId] = w;
-        GlobalWorkers[globalId] = localWorkers[globalId];
-        GlobalWorkersStatus[globalId] = 1;
-        i++;
-        GlobalCounter++;
-    }
-    return localWorkers;
+    
+    // Create a single Worker
+    var w = new Worker('/workers/MakeStage.js');
+    var globalId = worker_id + '--' + 'single_stage';
+    w.postMessage({channel: 'create', id: globalId});
+    GlobalWorkers[globalId] = w;
+    GlobalWorkersStatus[globalId] = 'run';
+    
+    // Worker work alone
+    w.postMessage({channel: "init", data: Global_data});
+    w.postMessage({channel: "run"});
+    w.addEventListener('message', function (e) {
+        var result = e.data;
+        if (result.channel === 'result') {
+            //console.log(worker_id);
+            //console.log(result);
+            //console.log('******************');
+            self.postMessage({channel: 'result', output: result.output, id: worker_id, data: result.data});
+        }
+        // Specific case, no reutilisability of childworker
+        if (result.channel === 'wait') {
+            GlobalWorkers[result.id].postMessage({channel: 'stop'});
+        }
+        if (result.channel === 'killMe') {
+            childSendKillMe(result.id);
+        }
+    });    
 }
 
 /**********************************/
@@ -167,7 +155,7 @@ function makeMultipleStageRocket() {
         DataToProcessInUpperStage.push(round(part * Global_data.rocket.dv));
     }
     
-    var localworkers = createWorkerForMultiStage('getStage', Global_data.simu.nbWorker, processDataToProcessInUpperStage);
+    var localworkers = createWorkerForMultiStage('MakeStage', Global_data.simu.nbWorker, processDataToProcessInUpperStage);
     // Run X worker to process "DataToProcessInUpperStage" stack item per item and fill a "UpperStageResults" Stack
     for(var wid in localworkers) {
         processDataToProcessInUpperStage(wid);
