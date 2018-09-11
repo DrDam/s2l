@@ -44,7 +44,7 @@ self.addEventListener('message', function (e) {
 function make_something() {
     setTimeout(function(){
     //console.log('make_something for ' + Global_data.a);
-    self.postMessage({channel:'output', id:worker_id, callback:'runLevel2', data:{out:Global_data.a}});
+    self.postMessage({channel:'output', id:worker_id, data:{out:Global_data.a}});
     autostop();
 
         //do what you need here
