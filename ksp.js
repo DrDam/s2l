@@ -213,6 +213,7 @@
             };
 
             var nbWorkers = parseInt(elems.nbworker.value);
+// window.navigator.hardwareConcurrency
 
             var simu = {};
             simu.nbWorker = nbWorkers;
