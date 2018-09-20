@@ -14,7 +14,7 @@ function test2_process() {
     master.postMessage({channel: 'init', data: Data});
     master.addEventListener('message', function (event) {
         var channel = event.data.channel;
-        if(channel == 'end') {
+        if(channel == 'wait') {
             // If Master end all is processing, kill it
             master.postMessage({channel:'stop'})
         }

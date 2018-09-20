@@ -216,7 +216,8 @@
 // window.navigator.hardwareConcurrency
 
             var simu = {};
-            simu.nbWorker = nbWorkers;
+            //simu.nbWorker = nbWorkers;
+            simu.nbWorker = 1;
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
             simu.startTime = startTime.getTime();
@@ -230,17 +231,13 @@
           //      fuelTypes: FuelTypes,
           //      sizes: Sizes
             };
-
-            sessionStorage.setItem('parts', JSON.stringify(Parts));
-  //          windows.sessionStorage.setItem('fuelTypes', JSON.stringify(FuelTypes));
-  //          windows.sessionStorage.setItem('sizes', JSON.stringify(Sizes));
             
             var cuHTML = makeCuHtml(CU, Sizes);
 
-            //debug.send('###################');
-            //debug.send('input data');
-            //debug.send(computationData);
-            //debug.send('###################');
+            //console.log('###################');
+            //console.log('input data');
+            //console.log(computationData);
+            //console.log('###################');
 
             var nbStage;
             result_id = 0;
@@ -258,18 +255,24 @@
                 var nbstages = nbStages + 1;
                 var master_data = clone(computationData);
                 master_data.rocket.stages = nbstages;
-
-                masters[id].postMessage({channel: "init", id: id, data: master_data});
+                masters[id].postMessage({channel: 'create', id: id});
+                masters[id].postMessage({channel: "init", data: master_data});
                 masters[id].postMessage({channel: "run"});
                 masters[id].addEventListener('message', function (e) {
                     var result = e.data;
-                    if (result.channel == 'result') {
+                    var channel = result.channel;
+                    if (channel == 'result') {
                         var dataToTable = e.data.output;
                         dataToTable.cu = computationData.cu;
                         dataToTable.cuHTML = cuHTML;
                         updateDom(dataToTable);
                     }
-                    if (result.channel == 'end') {
+                    if(channel == 'wait') {
+                        var master_id = result.id;
+                        // If Master end all is processing, kill it
+                        masters[master_id].postMessage({channel:'stop'})
+                    }
+                    if (channel == 'killMe') {
                         var id_to_kill = result.id;
                         debug.send(id_to_kill + ' # END');
                         masters[id_to_kill] = undefined;

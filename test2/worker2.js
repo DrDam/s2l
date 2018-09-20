@@ -4,7 +4,7 @@ var Global_data = {};
 var Global_status = 'run';
 
 function autostop() {
-    self.postMessage({channel: 'end', id: worker_id});
+    self.postMessage({channel: 'wait', id: worker_id});
     Global_data = null;
     //close();
 }
@@ -44,7 +44,7 @@ self.addEventListener('message', function (e) {
 function make_something() {
     setTimeout(function(){
     //console.log('make_something for ' + Global_data.a);
-    self.postMessage({channel:'output', id:worker_id, data:{out:Global_data.a}});
+    self.postMessage({channel:'output', id:worker_id, data:{out:{b:Global_data.a}}});
     autostop();
 
         //do what you need here

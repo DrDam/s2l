@@ -6,23 +6,33 @@ var Global_data = {};
 var Global_status = 'run';
 
 function autostop() {
-    self.postMessage({channel: 'end', id: worker_id});
+    self.postMessage({channel: 'wait', id: worker_id});
     var stopped = new Date();
     Global_data = null;
-    debug.send(worker_id + ' # killMe # ' + round((stopped - created) / 1000, 0) + "sec running");
+    debug.send(worker_id + ' # wait # ' + round((stopped - created) / 1000, 0) + "sec running");
+}
+
+function killMe() {
+    self.postMessage({channel: 'killMe', id: worker_id});
+    Global_data = null;
     close();
 }
 
 // Communication
 self.addEventListener('message', function (e) {
-    if (e.data.channel == 'stop') {
+    var inputs = e.data;
+    if (inputs.channel == 'stop') {
         Global_status = 'stop';
-        autostop();
+        killMe();
+    }
+    
+    if(inputs.channel == 'create') {
+        worker_id = inputs.id;
+        debug.send(worker_id + ' # created');
     }
 
-    if (e.data.channel == 'init') {
-        worker_id = e.data.id;
-        Global_data = e.data.data;
+    if (inputs.channel == 'init') {
+        Global_data = inputs.data;
         debug.setStart(Global_data.simu.startTime);
         debug.send(worker_id + ' # init');
         return;
