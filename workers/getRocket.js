@@ -89,6 +89,7 @@ self.addEventListener('message', function (e) {
     var inputs = e.data;
     if (inputs.channel == 'stop') {
         Global_status = 'stop';
+        debug.send(worker_id + ' # to stop');
         SendStopToAllChildren();
         return;
     } 

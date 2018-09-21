@@ -20,28 +20,28 @@
         });
 
         var Sizes = [
-            { id:'size0', label:'Tiny - 0.625m'},
-            { id:'size1', label:'Small - 1.25m'},
-            { id:'size1p5', label:'Medium - 1.875m'},
-            { id:'size2', label:'Large - 2.5m'},
-            { id:'size3', label:'Extra Large - 3.75m'},
-            { id:'size4', label:'Huge - 5m'},
-            { id:'mk1', label:'Mk1 - 5m'},
-            { id:'mk2', label:'Mk2'},
-            { id:'mk3', label:'Mk3'}
+            {id: 'size0', label: 'Tiny - 0.625m'},
+            {id: 'size1', label: 'Small - 1.25m'},
+            {id: 'size1p5', label: 'Medium - 1.875m'},
+            {id: 'size2', label: 'Large - 2.5m'},
+            {id: 'size3', label: 'Extra Large - 3.75m'},
+            {id: 'size4', label: 'Huge - 5m'},
+            {id: 'mk1', label: 'Mk1 - 5m'},
+            {id: 'mk2', label: 'Mk2'},
+            {id: 'mk3', label: 'Mk3'}
         ];
         // Populate CU size select
         $.each(Sizes, function (i, item) {
-            var data = { 
+            var data = {
                 value: item.id,
-                text : item.label
+                text: item.label
             };
-            if(item.id === 'size1') {
+            if (item.id === 'size1') {
                 data.selected = 'selected';
             }
             $('#sizeCU').append($('<option>', data));
         });
-        
+
         // Data from collections
         var Parts = {};
         Parts.engines = [];
@@ -58,7 +58,7 @@
         FuelTypes.O = 'Oxydizer';
         FuelTypes.M = 'MonoPropellant';
         FuelTypes.X = 'XenonGas';
-        
+
         // Reactivate action button when the two collection are loaded
         var loadCollectionValidation = function (type) {
             validationData.push(type);
@@ -121,8 +121,8 @@
         $.ajax({
             url: "http://kspapi.drdamlab.net/collection/adapters"
         }).done(function (data) {
-            for (var id in data.adapters) {    
-                if(id === 'largeAdapter2') {
+            for (var id in data.adapters) {
+                if (id === 'largeAdapter2') {
                     continue;
                 }
                 var adapter = data.adapters[id];
@@ -131,7 +131,7 @@
             }
             loadCollectionValidation('adapters');
         });
-        
+
 
         //  Workers configuration
         var masters = [];
@@ -163,12 +163,12 @@
 
         // Binding start Button
         $('#param').submit(function (event) {
-            
+
             var startTime = new Date();
             console.log('Start Calculations at ' + startTime);
             debug.setStart(startTime.getTime());
             debug.send('Worker Id # Message # ', true);
-            
+
             event.preventDefault();
             $('#start').prop('disabled', true);
             $('#stop').prop('disabled', false);
@@ -221,31 +221,31 @@
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
             simu.startTime = startTime.getTime();
-            
+
             var computationData = {
                 SOI: SOI,
                 rocket: rocket,
                 cu: CU,
                 simu: simu,
                 parts: Parts
-          //      fuelTypes: FuelTypes,
-          //      sizes: Sizes
+                        //      fuelTypes: FuelTypes,
+                        //      sizes: Sizes
             };
-            
+
             var cuHTML = makeCuHtml(CU, Sizes);
-
-            console.log('###################');
-            console.log('input data');
-            console.log(computationData);
-            console.log('###################');
-
+            /*
+             console.log('###################');
+             console.log('input data');
+             console.log(computationData);
+             console.log('###################');
+             */
             var nbStage;
             result_id = 0;
             masters = [];
             // Create workers
             for (nbStage = 0; nbStage < computationData.rocket.stages; nbStage++) {
                 var w = new Worker("workers/getRocket.js");
-                
+
                 var master_id = "master-" + nbStage;
                 masters[master_id] = w;
             }
@@ -255,7 +255,7 @@
                 var nbstages = nbStages + 1;
                 var master_data = clone(computationData);
                 master_data.rocket.stages = nbstages;
-                masters[id].postMessage({channel: 'create', id: id, startTime:startTime.getTime()});
+                masters[id].postMessage({channel: 'create', id: id, startTime: startTime.getTime()});
                 masters[id].postMessage({channel: "init", data: master_data});
                 masters[id].postMessage({channel: "run"});
                 masters[id].addEventListener('message', function (e) {
@@ -267,10 +267,10 @@
                         dataToTable.cuHTML = cuHTML;
                         updateDom(dataToTable);
                     }
-                    if(channel === 'wait') {
+                    if (channel === 'wait') {
                         var master_id = result.id;
                         // If Master end all is processing, kill it
-                        masters[master_id].postMessage({channel:'stop'});
+                        masters[master_id].postMessage({channel: 'stop'});
                     }
                     if (channel === 'killMe') {
                         var id_to_kill = result.id;
@@ -304,7 +304,7 @@
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
             var Cu_part = round(round(data.cu.mass / mass) * 100, 2);
-            
+
             var StagesHTML = '<div class="stagesDetails">';
             StagesHTML += data.cuHTML;
             StagesHTML += printStages(data.stages, mass, dv, result_id);
@@ -313,16 +313,16 @@
             //debug.send('output to table');
             //debug.send(data);
             //debug.send('###################');
-            resultTable.row.add([result_id, nbStages, mass, Cu_part,dv, StagesHTML]).draw();
+            resultTable.row.add([result_id, nbStages, mass, Cu_part, dv, StagesHTML]).draw();
         }
 
         function printStages(stages, fullMass, fullDv, result_id) {
             var output = '';
             for (var i in stages) {
-                var stage = stages[i];    
+                var stage = stages[i];
                 var stageData = {};
                 stageData.resultId = result_id;
-                stageData.stage_id = parseInt(i)+1;
+                stageData.stage_id = parseInt(i) + 1;
                 stageData.stageDv = round(stage.stageDv);
                 stageData.FullDv = round(fullDv);
                 stageData.MassLauncher = round(fullMass);
@@ -330,10 +330,10 @@
                 stageData.twrMax = round(stage.twr.max);
                 stageData.twrMin = round(stage.twr.min);
                 stageData.totalMass = round(stage.totalMass);
-                
+
                 stageData.decoupler = stage.decoupler;
                 stageData.engine = stage.engine;
-                
+
                 stageData.tanks = [];
                 var tanks = stage.tanks;
                 for (var j in tanks) {
@@ -352,22 +352,22 @@
 
             return output;
         }
-        
+
         function makeCuHtml(cu, sizes) {
             var output = '';
-            
+
             var cuData = {};
             cuData.mass = cu.mass;
             cuData.size = '';
-            for( var i in sizes) {
-                if(sizes[i].id === cu.size) {
+            for (var i in sizes) {
+                if (sizes[i].id === cu.size) {
                     cuData.size = sizes[i].label;
                 }
             }
-            
+
             var rendered = Mustache.render(cuTPL, cuData);
             output += rendered;
-            
+
             return output;
         }
 
