@@ -11,7 +11,7 @@ function runLevel2(worker_id, level2_data) {
 }
 
 function createWorker(worker_id) {
-    var newWorker = new Worker('test/worker.js');
+    var newWorker = new Worker('worker.js');
     newWorker.postMessage({channel: 'create', id: worker_id});
     newWorker.addEventListener('message', function (event) {
         var channel = event.data.channel;
@@ -62,7 +62,7 @@ function test() {
 }
 
 setTimeout(function () {
-    //test();
+    test();
 }, 2000);
 
 

@@ -9,8 +9,11 @@ var worker_id;
 
 // Computation data / status
 var Global_data = {};
+
 var Global_status = 'run';
 var created = new Date();
+
+// MULTIPLE STAGE
 
 // Worker Stack
 var UpperWStackStatus = [];
@@ -21,6 +24,11 @@ var RocketWStack = [];
 // Temporary Result Stack
 var RepartitionStack = [];
 var UpperResultStack = [];
+
+// ONLY ONE STAGE
+var SingleStageWorkers = [];
+var SingleStageWorkersStatus = [];
+
 
 // Refresh Temporary Result Stack & event launcher
 function cleanData() {
@@ -53,7 +61,8 @@ function autostop() {
 
  // Delete me
  function killMe() {
-     if(Object.values(UpperWStackStatus).join('') == '' &&
+     if(Object.values(SingleStageWorkers).join('') == '' &&
+        Object.values(UpperWStackStatus).join('') == '' &&
         Object.values(RocketWStackStatus).join('') == '') {
             self.postMessage({channel: 'killMe', id: worker_id});
             cleanData();
@@ -69,6 +78,9 @@ function SendStopToAllChildren() {
     for (var i in RocketWStack) {
         RocketWStack[i].postMessage({channel: "stop"});
     }
+    for (var i in SingleStageWorkers) {
+        SingleStageWorkers[i].postMessage({channel: "stop"});
+    }
 }
 
 
@@ -83,19 +95,21 @@ self.addEventListener('message', function (e) {
 
     if (inputs.channel == 'create') {
         worker_id = inputs.id;
+        debug.setStart(inputs.startTime);
         debug.send(worker_id + ' # created');
         return;
     }
 
     if (inputs.channel == 'init') {
+        cleanData();
         Global_data = inputs.data;
         debug.setStart(Global_data.simu.startTime);
-        cleanData();
         debug.send(worker_id + ' # init');
         return;
     }
 
     if (inputs.channel == 'run') {
+        debug.send(worker_id + ' # run');
         drawMeARocket();
         return;
     }
@@ -104,22 +118,21 @@ self.addEventListener('message', function (e) {
 // Processing functions
 function drawMeARocket() {
     //console.log(data);
-
     // Case 1 : Generate monobloc rocket for specific Dv
-    if (globalData.rocket.type == 'mono' && globalData.rocket.stages == 1) {
-        //debug.send(worker_id + ' # makeSingleStageRocket');
-        makeSingleStageRocket(globalData);
+    if (Global_data.rocket.type == 'mono' && Global_data.rocket.stages == 1) {
+        debug.send(worker_id + ' # makeSingleStageRocket');
+        makeSingleStageRocket();
     }
 
     // Case 1 : Generate monobloc rocket for specific Dv
-    if (globalData.rocket.type == 'mono' && globalData.rocket.stages > 1) {
-        //debug.send(worker_id + ' # makeMultipleStageRocket');
-        makeMultipleStageRocket(globalData);
+    if (Global_data.rocket.type == 'mono' && Global_data.rocket.stages > 1) {
+        debug.send(worker_id + ' # makeMultipleStageRocket');
+        makeMultipleStageRocket();
     }
 }
 
-function makeMultipleStageRocket(localData) {
-    
+function makeMultipleStageRocket() {
+    console.log(Global_data);
     var input_step = Global_data.simu.step;
     var calculation_step = round(100/input_step, 0) - 1
     
@@ -432,23 +445,35 @@ function makeMultipleStageRocket(localData) {
 
 
 
+
+ /************** A GARDER *******************/
+
+
 // Single stage Rocket Case
-function makeSingleStageRocket(localData) {
+function makeSingleStageRocket() {
 
     var simpleWorkers = generateWorkers('getStage', 1);
     for (var i in simpleWorkers) {
-        simpleWorkers[i].postMessage({channel: "init", id: i, data: localData});
+        simpleWorkers[i].postMessage({channel: "create", id: i, startTime: Global_data.simu.startTime});
+        simpleWorkers[i].postMessage({channel: "init", data: Global_data});
         simpleWorkers[i].postMessage({channel: "run"});
         simpleWorkers[i].addEventListener('message',function(e){
             var result = e.data;
+            var subworker_id = result.id
             if (result.channel == 'result') {
                 //debug(worker_id);
                 //debug(result);
                 //debug('******************');
                 self.postMessage({channel: 'result', output: result.output, id: worker_id});
             }
-            if (result.channel == 'end') {
-                childSendKillMe(result.id);
+            if (result.channel == 'wait') {
+                SingleStageWorkersStatus[subworker_id] = 'wait';
+                SingleStageWorkers[subworker_id].postMessage({channel:'stop'})
+            }
+            if (result.channel == 'killMe') {
+                SingleStageWorkers[subworker_id] = undefined;
+                SingleStageWorkersStatus[subworker_id] = '';
+                killMe();
             }
 
         });
@@ -461,13 +486,14 @@ function generateWorkers(type, nb) {
     var i = 0;
     while (i < nb) {
         var w = new Worker('/workers/' + type + ".js");
-        var globalId = worker_id + '--' + type + '--' + globalCounter;
+        var globalId = worker_id + '--' + type;
         //debug('Generate woker ' + globalId);
         localWorkers[globalId] = w;
-        globalWorkers[globalId] = localWorkers[globalId];
-        globalWorkersStatus[globalId] = 1;
+        SingleStageWorkers[globalId] = localWorkers[globalId];
+        SingleStageWorkersStatus[globalId] = 'created';
         i++;
-        globalCounter++;
     }
     return localWorkers;
 }
+
+

@@ -24,13 +24,13 @@ self.addEventListener('message', function (e) {
 
     if (e.data.channel == 'create') {
         worker_id = e.data.id;
-        //console.log(worker_id + ' # Create # ');
+        console.log(worker_id + ' # Create # ');
         return;
     }
     
     if (e.data.channel == 'init') {
         Global_data = e.data.data;
-       // console.log(worker_id + ' # init # ' + Global_data.a);
+        console.log(worker_id + ' # init # ' + Global_data.a);
         return;
     }
     

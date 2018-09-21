@@ -27,6 +27,7 @@ self.addEventListener('message', function (e) {
     }
     
     if(inputs.channel == 'create') {
+        debug.setStart(inputs.startTime);
         worker_id = inputs.id;
         debug.send(worker_id + ' # created');
     }

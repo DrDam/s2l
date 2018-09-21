@@ -28,7 +28,7 @@
             { id:'size4', label:'Huge - 5m'},
             { id:'mk1', label:'Mk1 - 5m'},
             { id:'mk2', label:'Mk2'},
-            { id:'mk3', label:'Mk3'},
+            { id:'mk3', label:'Mk3'}
         ];
         // Populate CU size select
         $.each(Sizes, function (i, item) {
@@ -36,7 +36,7 @@
                 value: item.id,
                 text : item.label
             };
-            if(item.id == 'size1') {
+            if(item.id === 'size1') {
                 data.selected = 'selected';
             }
             $('#sizeCU').append($('<option>', data));
@@ -62,7 +62,7 @@
         // Reactivate action button when the two collection are loaded
         var loadCollectionValidation = function (type) {
             validationData.push(type);
-            if (validationData.length == 4) {
+            if (validationData.length === 4) {
                 $('.action_button').each(function () {
                     $(this).prop('disabled', false);
                 });
@@ -71,14 +71,14 @@
 
         // Load Engines
         $.ajax({
-            url: "http://kspapi.drdamlab.net/collection/engines",
+            url: "http://kspapi.drdamlab.net/collection/engines"
         }).done(function (data) {
             for (var id in data.engines) {
                 var engine = data.engines[id];
                 var modes = engine.modes;
                 for (var mode_id in modes) {
                     // delete all Jet engines & modes
-                    if (mode_id == 'Turbine') {
+                    if (mode_id === 'Turbine') {
                         delete modes[mode_id];
                     }
                 }
@@ -95,7 +95,7 @@
 
         // Load fuelTanks
         $.ajax({
-            url: "http://kspapi.drdamlab.net/collection/fuelTanks",
+            url: "http://kspapi.drdamlab.net/collection/fuelTanks"
         }).done(function (data) {
             for (var id in data.fuelTanks) {
                 var tank = data.fuelTanks[id];
@@ -107,7 +107,7 @@
 
         // Load Decouplers
         $.ajax({
-            url: "http://kspapi.drdamlab.net/collection/decouplers",
+            url: "http://kspapi.drdamlab.net/collection/decouplers"
         }).done(function (data) {
             for (var id in data.decouplers) {
                 var decoupler = data.decouplers[id];
@@ -119,10 +119,10 @@
 
         // Load Adapters
         $.ajax({
-            url: "http://kspapi.drdamlab.net/collection/adapters",
+            url: "http://kspapi.drdamlab.net/collection/adapters"
         }).done(function (data) {
             for (var id in data.adapters) {    
-                if(id == 'largeAdapter2') {
+                if(id === 'largeAdapter2') {
                     continue;
                 }
                 var adapter = data.adapters[id];
@@ -213,11 +213,11 @@
             };
 
             var nbWorkers = parseInt(elems.nbworker.value);
+            nbWorkers = 1;
 // window.navigator.hardwareConcurrency
 
             var simu = {};
-            //simu.nbWorker = nbWorkers;
-            simu.nbWorker = 1;
+            simu.nbWorker = nbWorkers;
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
             simu.startTime = startTime.getTime();
@@ -227,17 +227,17 @@
                 rocket: rocket,
                 cu: CU,
                 simu: simu,
-                parts: Parts,
+                parts: Parts
           //      fuelTypes: FuelTypes,
           //      sizes: Sizes
             };
             
             var cuHTML = makeCuHtml(CU, Sizes);
 
-            //console.log('###################');
-            //console.log('input data');
-            //console.log(computationData);
-            //console.log('###################');
+            console.log('###################');
+            console.log('input data');
+            console.log(computationData);
+            console.log('###################');
 
             var nbStage;
             result_id = 0;
@@ -255,24 +255,24 @@
                 var nbstages = nbStages + 1;
                 var master_data = clone(computationData);
                 master_data.rocket.stages = nbstages;
-                masters[id].postMessage({channel: 'create', id: id});
+                masters[id].postMessage({channel: 'create', id: id, startTime:startTime.getTime()});
                 masters[id].postMessage({channel: "init", data: master_data});
                 masters[id].postMessage({channel: "run"});
                 masters[id].addEventListener('message', function (e) {
                     var result = e.data;
                     var channel = result.channel;
-                    if (channel == 'result') {
+                    if (channel === 'result') {
                         var dataToTable = e.data.output;
                         dataToTable.cu = computationData.cu;
                         dataToTable.cuHTML = cuHTML;
                         updateDom(dataToTable);
                     }
-                    if(channel == 'wait') {
+                    if(channel === 'wait') {
                         var master_id = result.id;
                         // If Master end all is processing, kill it
-                        masters[master_id].postMessage({channel:'stop'})
+                        masters[master_id].postMessage({channel:'stop'});
                     }
-                    if (channel == 'killMe') {
+                    if (channel === 'killMe') {
                         var id_to_kill = result.id;
                         debug.send(id_to_kill + ' # END');
                         masters[id_to_kill] = undefined;
@@ -360,7 +360,7 @@
             cuData.mass = cu.mass;
             cuData.size = '';
             for( var i in sizes) {
-                if(sizes[i].id == cu.size) {
+                if(sizes[i].id === cu.size) {
                     cuData.size = sizes[i].label;
                 }
             }
