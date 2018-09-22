@@ -1,5 +1,5 @@
-importScripts('../lib/lib.js', 'makeSingleStageRocket.js');  
-if(typeof Worker === 'undefined') {
+importScripts('../lib/lib.js', 'makeSingleStageRocket.js');
+if (typeof Worker === 'undefined') {
     // Load subworker only if browser not support natively
     importScripts("../lib/subworkers.js");
 }
@@ -16,18 +16,18 @@ var created = new Date();
 // MULTIPLE STAGE
 
 // Worker Stack
-var UpperWStackStatus = [];
-var UpperWStack = [];
-var RocketWStackStatus = [];
-var RocketWStack = [];
+var UpperWStackStatus = {};
+var UpperWStack = {};
+var RocketWStackStatus = {};
+var RocketWStack = {};
 
 // Temporary Result Stack
 var RepartitionStack = [];
 var UpperResultStack = [];
 
 // ONLY ONE STAGE
-var SingleStageWorkers = [];
-var SingleStageWorkersStatus = [];
+var SingleStageWorkers = {};
+var SingleStageWorkersStatus = {};
 
 
 // Refresh Temporary Result Stack & event launcher
@@ -59,16 +59,16 @@ function autostop() {
     self.postMessage({channel: 'wait', id: worker_id});
 }
 
- // Delete me
- function killMe() {
-     if(Object.values(SingleStageWorkers).join('') == '' &&
-        Object.values(UpperWStackStatus).join('') == '' &&
-        Object.values(RocketWStackStatus).join('') == '') {
-            self.postMessage({channel: 'killMe', id: worker_id});
-            cleanData();
-            close();    
-     }
- }
+// Delete me
+function killMe() {
+    if (Object.values(SingleStageWorkers).join('') == '' &&
+            Object.values(UpperWStackStatus).join('') == '' &&
+            Object.values(RocketWStackStatus).join('') == '') {
+        self.postMessage({channel: 'killMe', id: worker_id});
+        cleanData();
+        close();
+    }
+}
 
 // Stop All Children
 function SendStopToAllChildren() {
@@ -92,7 +92,7 @@ self.addEventListener('message', function (e) {
         debug.send(worker_id + ' # to ');
         SendStopToAllChildren();
         return;
-    } 
+    }
 
     if (inputs.channel == 'create') {
         worker_id = inputs.id;
@@ -133,34 +133,68 @@ function drawMeARocket() {
     }
 }
 
+// Make multistage rocket
 function makeMultipleStageRocket() {
-    console.log(Global_data);
+
     var input_step = Global_data.simu.step;
-    var calculation_step = round(100/input_step, 0) - 1
-    
+    var calculation_step = round(100 / input_step, 0) - 1
+
     for (var i = 0; i < calculation_step; i++) {
-        var part = (i + 1) * input_step / 100;       
-        var dv_step = round(part * localData.rocket.dv);
+        var part = (i + 1) * input_step / 100;
+        var dv_step = round(part * Global_data.rocket.dv);
         RepartitionStack.push(dv_step);
     }
-    
+
     // Generate RockerW
-    if (UpperWStackStatus.length === 0) {
-        MakeUpperStageW(Global_data.simu.nbWorker );
+    if (Object.keys(UpperWStack).length === 0) {
+        MakeUpperStageW(Global_data.simu.nbWorker);
     }
-    
-        // Run First Process
+
+    // Run First Process
     for (var UpperW_id in UpperWStack) {
         UpperWStackStatus[UpperW_id] = 'reserved';
         SearchUpperStage(UpperW_id);
     }
 }
 
+// Generate Upper Worker
+function MakeUpperStageW(nb) {
+    var i = 0;
+    while (i < nb) {
+        var worker_uid = worker_id + '--UpperStage--' + i;
+        UpperWStackStatus[worker_uid] = 'created';
+        var w = new Worker('getStage.js');
+        //debug('Generate woker ' + globalId);
+        UpperWStack[worker_uid] = w;
+        w.postMessage({channel: 'create', id: worker_uid, startTime: Global_data.simu.startTime});
+        w.addEventListener('message', function (e) {
+            var channel = e.data.channel;
+            var sub_worker_id = e.data.id;
+            if (channel == 'killMe') {
+                UpperWStack[sub_worker_id] = undefined;
+                UpperWStackStatus[sub_worker_id] = '';
+                killMe();
+            }
+            if (channel == 'wait') {
+                SearchUpperStage(sub_worker_id);
+            }
+            if (channel == 'result') {
+                debug.send(sub_worker_id + ' # send Result');
+                UpperResultStack.push({
+                    output: e.data.output,
+                    data: e.data.data,
+                });
+            }
+        });
+        i++;
+    }
+}
+
 // Send data to UpperStage Processing
-function SearchUpperStage(worker_id) {
+function SearchUpperStage(sub_worker_id) {
     var upperStageDv = RepartitionStack.shift();
     if (upperStageDv === undefined) {
-        UpperWStackStatus[worker_id] = 'wait';
+        UpperWStackStatus[sub_worker_id] = 'wait';
         return;
     }
     // Make data for UpperStage
@@ -170,55 +204,25 @@ function SearchUpperStage(worker_id) {
     UpperData.originData.stages = Global_data.rocket.stages;
     UpperData.rocket.dv = upperStageDv;
     UpperData.rocket.stages = 1;
-    
+
     // Send Data to UpperStage
-    UpperWStack[worker_id].postMessage({channel: 'init', data: UpperData});
-    UpperWStackStatus[worker_id] = 'run';
-    UpperWStack[worker_id].postMessage({channel: 'run'});
+    UpperWStack[sub_worker_id].postMessage({channel: 'init', data: UpperData});
+    UpperWStackStatus[sub_worker_id] = 'run';
+    UpperWStack[sub_worker_id].postMessage({channel: 'run'});
 }
 
-// Generate Upper Worker
-function MakeUpperStageW(nb) {
-    var i = 0;
-    while (i < nb) {
-        var worker_uid = worker_id + '--' + i;
-        UpperWStackStatus[worker_uid] = 'created';
-        var w = new Worker('getStage.js');
-        //debug('Generate woker ' + globalId);
-        UpperWStack[worker_uid] = w;
-        w.postMessage({channel: 'create', id: worker_uid});
-        w.addEventListener('message', function (e) {
-            var channel = e.data.channel;
-            var worker_id = e.data.id;
-            if (channel == 'killMe') {
-                UpperWStack[worker_id] = undefined;
-                UpperWStackStatus[worker_id] = '';
-                killMe();
-            }
-            if (channel == 'wait') {
-                SearchUpperStage(worker_id);
-            }
-            if (channel == 'result') {
-                UpperResultStack.push({
-                    output : e.data.output,
-                    data : e.data.data,
-                });
-            }
-        });
-        i++;
-    }
-}
+
 
 // When a UpperStage has push data to UpperStack
 self.addEventListener('UpperStackPush', function () {
-    if (RocketWStackStatus.length === 0) {
-        MakeRocketW(Global_data.nb_worker);
+    if (Object.keys(RocketWStack).length === 0) {
+        MakeRocketW(Global_data.simu.nbWorker);
     }
 
     for (var RocketW_id in RocketWStack) {
         if (RocketWStackStatus[RocketW_id] === 'wait' || RocketWStackStatus[RocketW_id] === 'created') {
             RocketWStackStatus[RocketW_id] = 'reserved';
-            SearchUnderStage(RocketW_id);
+            // SearchUnderStage(RocketW_id);
         }
     }
 });
@@ -239,7 +243,7 @@ function SearchUnderStage(worker_id) {
     NextData.cu.size = Item.out.size;
 
     NextData.Upper = Item.data;
-    
+
     RocketWStack[worker_id].postMessage({channel: 'init', data: NextData});
     RocketWStackStatus[worker_id] = 'run';
     RocketWStack[worker_id].postMessage({channel: 'run'});
@@ -247,9 +251,9 @@ function SearchUnderStage(worker_id) {
 
 // Signal end of all processing
 self.addEventListener('UpperStackIsEmpty', function () {
-    
+
     var nbRunning = findAllRunningWorker();
-    
+
     if (RepartitionStack.length === 0 &&
             UpperResultStack.length === 0 &&
             nbRunning == 0) {
@@ -261,13 +265,13 @@ self.addEventListener('UpperStackIsEmpty', function () {
 // Find how many children are running
 function findAllRunningWorker() {
     var counter = 0;
-    for(worker_id in UpperWStackStatus) {
-        if(UpperWStackStatus[worker_id] === 'run') {
+    for (worker_id in UpperWStackStatus) {
+        if (UpperWStackStatus[worker_id] === 'run') {
             counter++;
         }
     }
-        for(worker_id in UpperWStackStatus) {
-        if(RocketWStackStatus[worker_id] === 'run') {
+    for (worker_id in UpperWStackStatus) {
+        if (RocketWStackStatus[worker_id] === 'run') {
             counter++;
         }
     }
@@ -278,12 +282,12 @@ function findAllRunningWorker() {
 function MakeRocketW(nb) {
     var i = 0;
     while (i < nb) {
-        var worker_uid = worker_id + '--' + i;
+        var worker_uid = worker_id + '--UnderStage--' + i;
         RocketWStackStatus[worker_uid] = 'created';
         var w = new Worker('getRocket.js');
         //debug('Generate woker ' + globalId);
         RocketWStack[worker_uid] = w;
-        w.postMessage({channel: 'create', id: worker_uid});
+        w.postMessage({channel: 'create', id: worker_uid, startTime: Global_data.simu.startTime});
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
             var worker_id = e.data.id;
@@ -297,37 +301,37 @@ function MakeRocketW(nb) {
             }
             if (channel == 'result') {
                 var result = e.data.result;
-                
+                console.log(result);
                 var output_stages = {};
 
 
 // A finir
 
-                                var stages = result2.output.stages;
-                                output_stages = [];
-                                output_stages.push(UpperStageData.stages[0]);
-                                var total_mass = UpperStageData.totalMass + result2.output.totalMass;
-                                var burn = UpperStageData.burn + result2.output.burn;
-                                for (var i in stages) {
-                                    output_stages.push(stages[i]);
-                                }
-                                var total_dv =  UpperStageData.stageDv + result2.output.stageDv;
-                                //console.log(localData);
-                                var output = {
-                                    stages: output_stages,
-                                    nbStages: localData.rocket.stages,
-                                    totalMass: total_mass,
-                                    burn: burn,
-                                    stageDv: total_dv,
-                                };
-                                //console.log('******************');
-                                //console.log(worker_id);
-                                //console.log(output);
-                                //console.log('******************');
-                                self.postMessage({channel: 'result', output: output, id: worker_id, data:Global_data});
-                
-                
-                
+                var stages = result2.output.stages;
+                output_stages = [];
+                output_stages.push(UpperStageData.stages[0]);
+                var total_mass = UpperStageData.totalMass + result2.output.totalMass;
+                var burn = UpperStageData.burn + result2.output.burn;
+                for (var i in stages) {
+                    output_stages.push(stages[i]);
+                }
+                var total_dv = UpperStageData.stageDv + result2.output.stageDv;
+                //console.log(localData);
+                var output = {
+                    stages: output_stages,
+                    nbStages: localData.rocket.stages,
+                    totalMass: total_mass,
+                    burn: burn,
+                    stageDv: total_dv,
+                };
+                //console.log('******************');
+                //console.log(worker_id);
+                //console.log(output);
+                //console.log('******************');
+                self.postMessage({channel: 'result', output: output, id: worker_id, data: Global_data});
+
+
+
                 self.postMessage({channel: 'result', output: result});
             }
         });
@@ -362,11 +366,13 @@ function MakeRocketW(nb) {
 
 
 
-function makeMultipleStageRocket(localData) {
+function OLDmakeMultipleStageRocket(localData) {
     // generate DV repartition
     var i;
     for (i = 0; i < 9; i++) {
-        if(Global_status == 'stop') {return null;}
+        if (Global_status == 'stop') {
+            return null;
+        }
         var part = (i + 1) * 10 / 100;
         var UpperData = clone(localData);
         UpperData.rocket.dv = round(part * localData.rocket.dv);
@@ -377,19 +383,21 @@ function makeMultipleStageRocket(localData) {
         for (var i in simpleWorkers) {
             simpleWorkers[i].postMessage({channel: "init", id: i, data: UpperData});
             simpleWorkers[i].postMessage({channel: "run"});
-            simpleWorkers[i].addEventListener('message',function(e){
+            simpleWorkers[i].addEventListener('message', function (e) {
                 var result = e.data;
                 if (result.channel == 'end') {
                     childSendKillMe(result.id);
                 }
                 if (result.channel == 'result') {
-                    if(Global_status == 'stop') {return null;}
+                    if (Global_status == 'stop') {
+                        return null;
+                    }
                     // When UpperStage found a solution, 
                     // construct all rest of the launcher
                     // console.log(result);
                     var UpperStageData = result.output;
                     var NextData = clone(localData);
-                    
+
                     NextData.rocket.dv = localData.rocket.dv - UpperData.rocket.dv;
                     NextData.rocket.stages = localData.rocket.stages - 1;
                     NextData.cu.mass = UpperStageData.totalMass;
@@ -399,13 +407,15 @@ function makeMultipleStageRocket(localData) {
                     for (var i in nextWorker) {
                         nextWorker[i].postMessage({channel: "init", id: i, data: NextData});
                         nextWorker[i].postMessage({channel: "run"});
-                        nextWorker[i].addEventListener('message',function(e){
+                        nextWorker[i].addEventListener('message', function (e) {
                             var result2 = e.data;
                             if (result2.channel == 'end') {
                                 childSendKillMe(result2.id);
                             }
                             if (result2.channel == 'result') {
-                                if(Global_status == 'stop') {return null;}
+                                if (Global_status == 'stop') {
+                                    return null;
+                                }
                                 // If rest of launcher find a solution
                                 //console.log(worker_id);
                                 //console.log(result);
@@ -420,7 +430,7 @@ function makeMultipleStageRocket(localData) {
                                 for (var i in stages) {
                                     output_stages.push(stages[i]);
                                 }
-                                var total_dv =  UpperStageData.stageDv + result2.output.stageDv;
+                                var total_dv = UpperStageData.stageDv + result2.output.stageDv;
                                 //console.log(localData);
                                 var output = {
                                     stages: output_stages,

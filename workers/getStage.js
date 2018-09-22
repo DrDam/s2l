@@ -219,3 +219,8 @@ function getEngineCurveDateForAtm(engineCaracts, AtmPressur) {
         }
     }
 }
+
+function testTwr(Thrust, Mass, target, Go) {
+    var Twr = Thrust / Mass / Go;
+    return(Twr > target.min && Twr < target.max);
+}
