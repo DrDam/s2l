@@ -13,6 +13,7 @@ function autostop() {
 }
 
 function killMe() {
+    debug.send(worker_id + ' # killMe');
     self.postMessage({channel: 'killMe', id: worker_id});
     Global_data = null;
     close();

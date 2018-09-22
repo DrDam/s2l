@@ -1,24 +1,27 @@
 
 // Single stage Rocket Case
 function makeSingleStageRocket() {
-
-    var simpleWorkers = generateWorkers('getStage', 1);
-    for (var i in simpleWorkers) {
-        simpleWorkers[i].postMessage({channel: "create", id: i, startTime: Global_data.simu.startTime});
-        simpleWorkers[i].postMessage({channel: "init", data: Global_data});
-        simpleWorkers[i].postMessage({channel: "run"});
-        simpleWorkers[i].addEventListener('message',function(e){
+    
+    if (SingleStageWorkersCreated === false  ) {
+        SingleStageWorkersCreated = true;
+        SingleStageWorkers = generateWorkers('getStage', 1);
+    }
+    
+    for (var i in SingleStageWorkers) {
+        SingleStageWorkers[i].postMessage({channel: "init", data: Global_data});
+        SingleStageWorkers[i].postMessage({channel: "run"});
+        SingleStageWorkers[i].addEventListener('message',function(e){
             var result = e.data;
             var subworker_id = result.id
             if (result.channel == 'result') {
-                //debug(worker_id);
-                //debug(result);
-                //debug('******************');
+                //console.log(worker_id);
+                //console.log(result);
+                //console.log('******************');
                 self.postMessage({channel: 'result', output: result.output, id: worker_id});
             }
             if (result.channel == 'wait') {
                 SingleStageWorkersStatus[subworker_id] = 'wait';
-                SingleStageWorkers[subworker_id].postMessage({channel:'stop'})
+                autostop();
             }
             if (result.channel == 'killMe') {
                 SingleStageWorkers[subworker_id] = undefined;
@@ -37,7 +40,8 @@ function generateWorkers(type, nb) {
     while (i < nb) {
         var w = new Worker('/workers/' + type + ".js");
         var globalId = worker_id + '--' + type;
-        //debug('Generate woker ' + globalId);
+        //console.log('Generate woker ' + globalId);
+        w.postMessage({channel: "create", id: globalId, startTime: Global_data.simu.startTime});
         localWorkers[globalId] = w;
         SingleStageWorkers[globalId] = localWorkers[globalId];
         SingleStageWorkersStatus[globalId] = 'created';

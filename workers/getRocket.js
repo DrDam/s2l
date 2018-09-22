@@ -4,6 +4,8 @@ if (typeof Worker === 'undefined') {
     importScripts("../lib/subworkers.js");
 }
 
+if(debug === undefined) {debug = {};}
+
 // Worker ID
 var worker_id;
 
@@ -13,22 +15,24 @@ var Global_data = {};
 var Global_status = 'run';
 var created = new Date();
 
-// MULTIPLE STAGE
+// Worker Stacks
 
-// Worker Stack
+// ONE STAGE
+var SingleStageWorkers = {};
+var SingleStageWorkersStatus = {};
+var SingleStageWorkersCreated = false;
+
+// MULTIPLE STAGE
 var UpperWStackStatus = {};
 var UpperWStack = {};
+var UpperWStackCreated = false;
 var RocketWStackStatus = {};
 var RocketWStack = {};
+var RocketWStackCreated = false;
 
 // Temporary Result Stack
 var RepartitionStack = [];
 var UpperResultStack = [];
-
-// ONLY ONE STAGE
-var SingleStageWorkers = {};
-var SingleStageWorkersStatus = {};
-
 
 // Refresh Temporary Result Stack & event launcher
 function cleanData() {
@@ -61,9 +65,10 @@ function autostop() {
 
 // Delete me
 function killMe() {
-    if (Object.values(SingleStageWorkers).join('') == '' &&
-            Object.values(UpperWStackStatus).join('') == '' &&
-            Object.values(RocketWStackStatus).join('') == '') {
+    if (Object.values(SingleStageWorkersStatus).join('') === '' &&
+            Object.values(UpperWStackStatus).join('') === '' &&
+            Object.values(RocketWStackStatus).join('') === '') {
+        debug.send(worker_id + ' # killMe');
         self.postMessage({channel: 'killMe', id: worker_id});
         cleanData();
         close();
@@ -73,13 +78,19 @@ function killMe() {
 // Stop All Children
 function SendStopToAllChildren() {
     for (var i in UpperWStack) {
-        UpperWStack[i].postMessage({channel: "stop"});
+        if(UpperWStack[i] !== undefined) {
+            UpperWStack[i].postMessage({channel: "stop"});
+        }
     }
-    for (var i in RocketWStack) {
-        RocketWStack[i].postMessage({channel: "stop"});
+    for (var j in RocketWStack) {
+        if(RocketWStack[j] !== undefined) {
+            RocketWStack[j].postMessage({channel: "stop"});
+        }
     }
-    for (var i in SingleStageWorkers) {
-        SingleStageWorkers[i].postMessage({channel: "stop"});
+    for (var k in SingleStageWorkers) {
+        if(SingleStageWorkers[k] !== undefined) {
+            SingleStageWorkers[k].postMessage({channel: "stop"});
+        }
     }
 }
 
@@ -87,21 +98,21 @@ function SendStopToAllChildren() {
 // Communication
 self.addEventListener('message', function (e) {
     var inputs = e.data;
-    if (inputs.channel == 'stop') {
+    if (inputs.channel === 'stop') {
         Global_status = 'stop';
-        debug.send(worker_id + ' # to ');
+        debug.send(worker_id + ' # to stop');
         SendStopToAllChildren();
         return;
     }
 
-    if (inputs.channel == 'create') {
+    if (inputs.channel === 'create') {
         worker_id = inputs.id;
         debug.setStart(inputs.startTime);
         debug.send(worker_id + ' # created');
         return;
     }
 
-    if (inputs.channel == 'init') {
+    if (inputs.channel === 'init') {
         cleanData();
         Global_data = inputs.data;
         debug.setStart(Global_data.simu.startTime);
@@ -109,7 +120,7 @@ self.addEventListener('message', function (e) {
         return;
     }
 
-    if (inputs.channel == 'run') {
+    if (inputs.channel === 'run') {
         debug.send(worker_id + ' # run');
         drawMeARocket();
         return;
@@ -120,14 +131,14 @@ self.addEventListener('message', function (e) {
 function drawMeARocket() {
     //console.log(data);
     // Case 1 : Generate monobloc rocket for specific Dv
-    if (Global_data.rocket.type == 'mono' && Global_data.rocket.stages == 1) {
+    if (Global_data.rocket.type === 'mono' && Global_data.rocket.stages === 1) {
         debug.send(worker_id + ' # makeSingleStageRocket');
         // in makeSingleStageRocket.js
         makeSingleStageRocket();
     }
 
     // Case 1 : Generate monobloc rocket for specific Dv
-    if (Global_data.rocket.type == 'mono' && Global_data.rocket.stages > 1) {
+    if (Global_data.rocket.type === 'mono' && Global_data.rocket.stages > 1) {
         debug.send(worker_id + ' # makeMultipleStageRocket');
         makeMultipleStageRocket();
     }
@@ -137,7 +148,7 @@ function drawMeARocket() {
 function makeMultipleStageRocket() {
 
     var input_step = Global_data.simu.step;
-    var calculation_step = round(100 / input_step, 0) - 1
+    var calculation_step = round(100 / input_step, 0) - 1;
 
     for (var i = 0; i < calculation_step; i++) {
         var part = (i + 1) * input_step / 100;
@@ -146,7 +157,8 @@ function makeMultipleStageRocket() {
     }
 
     // Generate RockerW
-    if (Object.keys(UpperWStack).length === 0) {
+    if (UpperWStackCreated === false  ) {
+        UpperWStackCreated = true;
         MakeUpperStageW(Global_data.simu.nbWorker);
     }
 
@@ -170,19 +182,19 @@ function MakeUpperStageW(nb) {
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
             var sub_worker_id = e.data.id;
-            if (channel == 'killMe') {
+            if (channel === 'killMe') {
                 UpperWStack[sub_worker_id] = undefined;
                 UpperWStackStatus[sub_worker_id] = '';
                 killMe();
             }
-            if (channel == 'wait') {
+            if (channel === 'wait') {
                 SearchUpperStage(sub_worker_id);
             }
-            if (channel == 'result') {
+            if (channel === 'result') {
                 debug.send(sub_worker_id + ' # send Result');
                 UpperResultStack.push({
                     output: e.data.output,
-                    data: e.data.data,
+                    data: e.data.data
                 });
             }
         });
@@ -197,9 +209,12 @@ function SearchUpperStage(sub_worker_id) {
         UpperWStackStatus[sub_worker_id] = 'wait';
         return;
     }
+    if(Global_status === 'stop') {
+        SendStopToAllChildren();
+    }
     // Make data for UpperStage
     var UpperData = clone(Global_data);
-    UpperData.originData = {}
+    UpperData.originData = {};
     UpperData.originData.dv = Global_data.rocket.dv;
     UpperData.originData.stages = Global_data.rocket.stages;
     UpperData.rocket.dv = upperStageDv;
@@ -215,48 +230,63 @@ function SearchUpperStage(sub_worker_id) {
 
 // When a UpperStage has push data to UpperStack
 self.addEventListener('UpperStackPush', function () {
-    if (Object.keys(RocketWStack).length === 0) {
+    
+    debug.send(worker_id +' # UpperResultStack.length # ' + UpperResultStack.length);
+    
+    if (RocketWStackCreated === false) {
+        RocketWStackCreated = true;
+        console.log('toto');
         MakeRocketW(Global_data.simu.nbWorker);
     }
 
     for (var RocketW_id in RocketWStack) {
         if (RocketWStackStatus[RocketW_id] === 'wait' || RocketWStackStatus[RocketW_id] === 'created') {
             RocketWStackStatus[RocketW_id] = 'reserved';
-            // SearchUnderStage(RocketW_id);
+            SearchUnderStage(RocketW_id);
         }
     }
 });
 
 
 // Search Under Stage rocessing
-function SearchUnderStage(worker_id) {
+function SearchUnderStage(sub_worker_id) {
     var Item = UpperResultStack.shift();
     if (Item === undefined) {
-        RocketWStackStatus[worker_id] = 'wait';
+        RocketWStackStatus[sub_worker_id] = 'wait';
         return;
     }
-    // Item = {out: {stage Found}, data: {Generation Date used}}
-    NextData = clone(Item.data);
+    if(Global_status === 'stop') {
+        SendStopToAllChildren();
+    }
+
+    // Item = {output: {stage Found}, data: {Generation Date used}}
+    var NextData = clone(Item.data);
     NextData.rocket.dv = Item.data.originData.dv - Item.data.rocket.dv;
     NextData.rocket.stages = Item.data.originData.stages - 1;
-    NextData.cu.mass = Item.out.totalMass;
-    NextData.cu.size = Item.out.size;
+    NextData.originData.mass = NextData.cu.mass;
+    NextData.originData.size = NextData.cu.size;
+    NextData.cu.mass = Item.output.totalMass;
+    NextData.cu.size = Item.output.size;
 
-    NextData.Upper = Item.data;
+    NextData.Upper = Item.output;
 
-    RocketWStack[worker_id].postMessage({channel: 'init', data: NextData});
-    RocketWStackStatus[worker_id] = 'run';
-    RocketWStack[worker_id].postMessage({channel: 'run'});
+    // console.log(NextData);
+    RocketWStack[sub_worker_id].postMessage({channel: 'init', data: NextData});
+    RocketWStackStatus[sub_worker_id] = 'run';
+    RocketWStack[sub_worker_id].postMessage({channel: 'run'});
 }
 
 // Signal end of all processing
 self.addEventListener('UpperStackIsEmpty', function () {
 
+    debug.send(worker_id + ' # UpperResultStack is Empty');
+
     var nbRunning = findAllRunningWorker();
 
-    if (RepartitionStack.length === 0 &&
+    if ((RepartitionStack.length === 0 &&
             UpperResultStack.length === 0 &&
-            nbRunning == 0) {
+            nbRunning === 0) || Global_status === 'stop')
+    {
         // Normal Stopping
         autostop();
     }
@@ -290,167 +320,47 @@ function MakeRocketW(nb) {
         w.postMessage({channel: 'create', id: worker_uid, startTime: Global_data.simu.startTime});
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
-            var worker_id = e.data.id;
-            if (channel == 'killMe') {
-                RocketWStack[worker_id] = undefined;
-                RocketWStackStatus[worker_id] = '';
+            var sub_worker_id = e.data.id;
+            if (channel === 'killMe') {
+                debug.send(sub_worker_id + ' # send killMe');
+                RocketWStack[sub_worker_id] = undefined;
+                RocketWStackStatus[sub_worker_id] = '';
                 killMe();
             }
-            if (channel == 'wait') {
-                SearchUnderStage(worker_id);
+            if (channel === 'wait') {
+                console.log(sub_worker_id + ' send wait');
+                SearchUnderStage(sub_worker_id);
             }
-            if (channel == 'result') {
-                var result = e.data.result;
+            if (channel === 'result') {
+                debug.send(sub_worker_id + ' # send Result');
+                var result = e.data;
+                
                 console.log(result);
                 var output_stages = {};
 
-
 // A finir
-
+/*
                 var stages = result2.output.stages;
                 output_stages = [];
                 output_stages.push(UpperStageData.stages[0]);
-                var total_mass = UpperStageData.totalMass + result2.output.totalMass;
-                var burn = UpperStageData.burn + result2.output.burn;
+                var total_mass = UpperStageData.totalMass + result.output.totalMass;
+                var burn = UpperStageData.burn + result.output.burn;
                 for (var i in stages) {
                     output_stages.push(stages[i]);
                 }
-                var total_dv = UpperStageData.stageDv + result2.output.stageDv;
-                //console.log(localData);
+                var total_dv = UpperStageData.stageDv + result.output.stageDv;
+
                 var output = {
                     stages: output_stages,
-                    nbStages: localData.rocket.stages,
+                    nbStages: Global_data.rocket.stages,
                     totalMass: total_mass,
                     burn: burn,
                     stageDv: total_dv,
                 };
-                //console.log('******************');
-                //console.log(worker_id);
-                //console.log(output);
-                //console.log('******************');
-                self.postMessage({channel: 'result', output: output, id: worker_id, data: Global_data});
-
-
-
-                self.postMessage({channel: 'result', output: result});
+*/
+                self.postMessage({channel: 'result', output: result.output, id: sub_worker_id, data: Global_data});
             }
         });
         i++;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* OLD PROCESSING */
-
-
-
-
-
-
-
-
-
-
-function OLDmakeMultipleStageRocket(localData) {
-    // generate DV repartition
-    var i;
-    for (i = 0; i < 9; i++) {
-        if (Global_status == 'stop') {
-            return null;
-        }
-        var part = (i + 1) * 10 / 100;
-        var UpperData = clone(localData);
-        UpperData.rocket.dv = round(part * localData.rocket.dv);
-        UpperData.rocket.stages = 1;
-
-        // Fire multiple worker testing all engine for last Stage
-        var simpleWorkers = generateWorkers('getStage', 1);
-        for (var i in simpleWorkers) {
-            simpleWorkers[i].postMessage({channel: "init", id: i, data: UpperData});
-            simpleWorkers[i].postMessage({channel: "run"});
-            simpleWorkers[i].addEventListener('message', function (e) {
-                var result = e.data;
-                if (result.channel == 'end') {
-                    childSendKillMe(result.id);
-                }
-                if (result.channel == 'result') {
-                    if (Global_status == 'stop') {
-                        return null;
-                    }
-                    // When UpperStage found a solution, 
-                    // construct all rest of the launcher
-                    // console.log(result);
-                    var UpperStageData = result.output;
-                    var NextData = clone(localData);
-
-                    NextData.rocket.dv = localData.rocket.dv - UpperData.rocket.dv;
-                    NextData.rocket.stages = localData.rocket.stages - 1;
-                    NextData.cu.mass = UpperStageData.totalMass;
-                    NextData.cu.size = UpperStageData.size;
-
-                    var nextWorker = generateWorkers('getRocket', 1);
-                    for (var i in nextWorker) {
-                        nextWorker[i].postMessage({channel: "init", id: i, data: NextData});
-                        nextWorker[i].postMessage({channel: "run"});
-                        nextWorker[i].addEventListener('message', function (e) {
-                            var result2 = e.data;
-                            if (result2.channel == 'end') {
-                                childSendKillMe(result2.id);
-                            }
-                            if (result2.channel == 'result') {
-                                if (Global_status == 'stop') {
-                                    return null;
-                                }
-                                // If rest of launcher find a solution
-                                //console.log(worker_id);
-                                //console.log(result);
-                                //console.log('******************');
-                                var output_stages = {};
-
-                                var stages = result2.output.stages;
-                                output_stages = [];
-                                output_stages.push(UpperStageData.stages[0]);
-                                var total_mass = UpperStageData.totalMass + result2.output.totalMass;
-                                var burn = UpperStageData.burn + result2.output.burn;
-                                for (var i in stages) {
-                                    output_stages.push(stages[i]);
-                                }
-                                var total_dv = UpperStageData.stageDv + result2.output.stageDv;
-                                //console.log(localData);
-                                var output = {
-                                    stages: output_stages,
-                                    nbStages: localData.rocket.stages,
-                                    totalMass: total_mass,
-                                    burn: burn,
-                                    stageDv: total_dv,
-                                };
-                                //console.log('******************');
-                                //console.log(worker_id);
-                                //console.log(output);
-                                //console.log('******************');
-                                self.postMessage({channel: 'result', output: output, id: worker_id});
-                            }
-                        });
-                    }
-                    NextData = null;
-                }
-            });
-        }
-    }
-}
-

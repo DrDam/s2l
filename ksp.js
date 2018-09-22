@@ -1,6 +1,11 @@
+var Global_status = "init";
+
 // Jquery
 (function ($) {
     $(document).ready(function () {
+        if(debug === undefined) {debug = {};}
+
+        Global_status = 'wait';
 
         // toggle information block
         $("#readme_button").click(function () {
@@ -159,6 +164,7 @@
             }
             $('#stop').prop('disabled', true);
             $('#start').prop('disabled', false);
+            Global_status = 'stop';
         });
 
         // Binding start Button
@@ -168,7 +174,7 @@
             console.log('Start Calculations at ' + startTime);
             debug.setStart(startTime.getTime());
             debug.send('Worker Id # Message # ', true);
-
+            Global_status = 'run';
             event.preventDefault();
             $('#start').prop('disabled', true);
             $('#stop').prop('disabled', false);
