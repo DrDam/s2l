@@ -268,7 +268,7 @@ var Global_status = "init";
                     var result = e.data;
                     var channel = result.channel;
                     if (channel === 'result') {
-                        console.log(e.data.output);
+                        //console.log(e.data.output);
                         var dataToTable = e.data.output;
                         dataToTable.cu = computationData.cu;
                         dataToTable.cuHTML = cuHTML;

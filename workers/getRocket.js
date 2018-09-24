@@ -327,31 +327,38 @@ function MakeRocketW(nb) {
                 killMe();
             }
             if (channel === 'wait') {
-                console.log(sub_worker_id + ' send wait');
+                debug.send(sub_worker_id + ' # send killMe');
                 SearchUnderStage(sub_worker_id);
             }
             if (channel === 'result') {
                 debug.send(sub_worker_id + ' # send Result');
                 var result = e.data;
-                var stages = result.output.stages;
+                //console.log(result);
+                var output = result.output;
+                var stages = output.stages;
                 var output_stages = [];
                 var total_mass = 0;
                 var burn = 0;
                 var total_dv = 0;
+                // Récupération des étages suppérieurs
                 if(result.data.Upper && result.data.Upper != undefined) {
-                    for(var stage_id in result.data.Upper.stages) {
-                        output_stages.push(result.data.Upper.stages[stage_id]);                        
+                    var Upper = result.data.Upper;
+                    for(var stage_id in Upper.stages) {
+                        output_stages.push(Upper.stages[stage_id]);                        
                     }
-                    total_mass = result.data.Upper.totalMass;
-                    burn = result.data.Upper.burn;
-                    total_dv = result.data.Upper.stageDv
-                    result.data.Upper = undefined;
+                    burn = Upper.burn;
+                    total_mass = Upper.totalMass;
+                    total_dv = Upper.stageDv;
+                    Upper = undefined;
                 }
+                // Ajout de l'étage en dessous
                 for (var i in stages) {
                     output_stages.push(stages[i]);
                 }
-                total_dv += result.output.stageDv;
-
+                total_dv += output.stageDv;
+                burn += output.burn;
+                total_mass += output.totalMass;
+                
                 var output = {
                     stages: output_stages,
                     nbStages: Global_data.rocket.stages,
