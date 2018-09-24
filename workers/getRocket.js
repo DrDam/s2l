@@ -13,7 +13,7 @@ var worker_id;
 var Global_data = {};
 
 var Global_status = 'run';
-var created = new Date();
+var startTime = new Date();
 
 // Worker Stacks
 
@@ -59,7 +59,7 @@ function cleanData() {
 function autostop() {
     cleanData();
     var stopped = new Date();
-    debug.send(worker_id + ' # wait # ' + round((stopped - created) / 1000, 0) + "sec running");
+    debug.send(worker_id + ' # wait # ' + round((stopped - startTime) / 1000, 0) + "sec running");
     self.postMessage({channel: 'wait', id: worker_id});
 }
 
@@ -115,7 +115,7 @@ self.addEventListener('message', function (e) {
     if (inputs.channel === 'init') {
         cleanData();
         Global_data = inputs.data;
-        debug.setStart(Global_data.simu.startTime);
+        startTime = new Date();
         debug.send(worker_id + ' # init');
         return;
     }
@@ -131,7 +131,7 @@ self.addEventListener('message', function (e) {
 function drawMeARocket() {
     //console.log(data);
     // Case 1 : Generate monobloc rocket for specific Dv
-    if (Global_data.rocket.type === 'mono' && Global_data.rocket.stages === 1) {
+    if (Global_data.rocket.stages === 1) {
         debug.send(worker_id + ' # makeSingleStageRocket');
         // in makeSingleStageRocket.js
         makeSingleStageRocket();
@@ -173,7 +173,7 @@ function makeMultipleStageRocket() {
 function MakeUpperStageW(nb) {
     var i = 0;
     while (i < nb) {
-        var worker_uid = worker_id + '--UpperStage--' + i;
+        var worker_uid = worker_id + '--TopStage--' + i;
         UpperWStackStatus[worker_uid] = 'created';
         var w = new Worker('getStage.js');
         //debug('Generate woker ' + globalId);
@@ -204,14 +204,17 @@ function MakeUpperStageW(nb) {
 
 // Send data to UpperStage Processing
 function SearchUpperStage(sub_worker_id) {
+    if(Global_status === 'stop') {
+        SendStopToAllChildren();
+        return;
+    }
+    
     var upperStageDv = RepartitionStack.shift();
     if (upperStageDv === undefined) {
         UpperWStackStatus[sub_worker_id] = 'wait';
         return;
     }
-    if(Global_status === 'stop') {
-        SendStopToAllChildren();
-    }
+
     // Make data for UpperStage
     var UpperData = clone(Global_data);
     UpperData.originData = {};
@@ -249,13 +252,15 @@ self.addEventListener('UpperStackPush', function () {
 
 // Search Under Stage rocessing
 function SearchUnderStage(sub_worker_id) {
+    if(Global_status === 'stop') {
+        SendStopToAllChildren();
+        return;
+    }
+    
     var Item = UpperResultStack.shift();
     if (Item === undefined) {
         RocketWStackStatus[sub_worker_id] = 'wait';
         return;
-    }
-    if(Global_status === 'stop') {
-        SendStopToAllChildren();
     }
 
     // Item = {output: {stage Found}, data: {Generation Date used}}
@@ -277,6 +282,10 @@ function SearchUnderStage(sub_worker_id) {
 
 // Signal end of all processing
 self.addEventListener('UpperStackIsEmpty', function () {
+    if(Global_status === 'stop') {
+        SendStopToAllChildren();
+        return;
+    }
 
     debug.send(worker_id + ' # UpperResultStack is Empty');
 
@@ -311,7 +320,7 @@ function findAllRunningWorker() {
 function MakeRocketW(nb) {
     var i = 0;
     while (i < nb) {
-        var worker_uid = worker_id + '--UnderStage--' + i;
+        var worker_uid = worker_id + '--BottomStage--' + i;
         RocketWStackStatus[worker_uid] = 'created';
         var w = new Worker('getRocket.js');
         //debug('Generate woker ' + globalId);
@@ -327,13 +336,13 @@ function MakeRocketW(nb) {
                 killMe();
             }
             if (channel === 'wait') {
-                debug.send(sub_worker_id + ' # send killMe');
+                //debug.send(sub_worker_id + ' # send wait');
                 SearchUnderStage(sub_worker_id);
             }
             if (channel === 'result') {
-                debug.send(sub_worker_id + ' # send Result');
+                //debug.send(sub_worker_id + ' # send Result');
                 var result = e.data;
-                //console.log(result);
+                
                 var output = result.output;
                 var stages = output.stages;
                 var output_stages = [];
@@ -341,16 +350,16 @@ function MakeRocketW(nb) {
                 var burn = 0;
                 var total_dv = 0;
                 // Récupération des étages suppérieurs
-                if(result.data.Upper && result.data.Upper != undefined) {
-                    var Upper = result.data.Upper;
-                    for(var stage_id in Upper.stages) {
-                        output_stages.push(Upper.stages[stage_id]);                        
-                    }
-                    burn = Upper.burn;
-                    total_mass = Upper.totalMass;
-                    total_dv = Upper.stageDv;
-                    Upper = undefined;
+                var upperData = result.data;
+                var Upper = upperData.Upper;
+                for(var stage_id in Upper.stages) {
+                    output_stages.push(Upper.stages[stage_id]);                        
                 }
+                burn = Upper.burn;
+                total_mass = Upper.totalMass;
+                total_dv = Upper.stageDv;
+                Upper = undefined;
+
                 // Ajout de l'étage en dessous
                 for (var i in stages) {
                     output_stages.push(stages[i]);
@@ -361,12 +370,15 @@ function MakeRocketW(nb) {
                 
                 var output = {
                     stages: output_stages,
-                    nbStages: Global_data.rocket.stages,
+                    nbStages: upperData.originData.stages,
                     totalMass: total_mass,
                     burn: burn,
                     stageDv: total_dv,
                 };
-                self.postMessage({channel: 'result', output: output, id: sub_worker_id, data: Global_data});
+                var allData = upperData;
+                upperData.underData = output;
+                
+                self.postMessage({channel: 'result', output: output, id: worker_id, data: allData});
             }
         });
         i++;

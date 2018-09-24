@@ -1,5 +1,5 @@
 importScripts('../lib/lib.js', 'getFuelTanks.js');
-var created = new Date();
+var startTime = new Date();
 // Generate 1 stage Rocket
 var worker_id;
 var Global_data = {};
@@ -9,7 +9,7 @@ function autostop() {
     self.postMessage({channel: 'wait', id: worker_id});
     var stopped = new Date();
     Global_data = null;
-    debug.send(worker_id + ' # wait # ' + round((stopped - created) / 1000, 0) + "sec running");
+    debug.send(worker_id + ' # wait # ' + round((stopped - startTime) / 1000, 0) + "sec running");
 }
 
 function killMe() {
@@ -36,7 +36,7 @@ self.addEventListener('message', function (e) {
 
     if (inputs.channel == 'init') {
         Global_data = inputs.data;
-        debug.setStart(Global_data.simu.startTime);
+        startTime = new Date();
         debug.send(worker_id + ' # init');
         return;
     }
@@ -50,7 +50,7 @@ self.addEventListener('message', function (e) {
 // Processing functions
 function drawMeARocket() {
     giveMeASingleStage(Global_data.parts.engines, Global_data.rocket.dv, Global_data.rocket.twr, Global_data.cu, Global_data.SOI.kerbin);
-    autostop();
+    setTimeout(function(){ autostop(); }, 10);
 }
 
 function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {

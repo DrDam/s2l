@@ -182,7 +182,6 @@ var Global_status = "init";
             if (resultTable === null) {
                 $('#results').show();
                 resultTable = $('#results').DataTable({
-                    paging: false,
                     searching: false,
                     language: {
                         emptyTable: "No configuration found from your specifications"
