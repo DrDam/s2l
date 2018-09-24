@@ -235,7 +235,6 @@ self.addEventListener('UpperStackPush', function () {
     
     if (RocketWStackCreated === false) {
         RocketWStackCreated = true;
-        console.log('toto');
         MakeRocketW(Global_data.simu.nbWorker);
     }
 
@@ -334,21 +333,24 @@ function MakeRocketW(nb) {
             if (channel === 'result') {
                 debug.send(sub_worker_id + ' # send Result');
                 var result = e.data;
-                
-                console.log(result);
-                var output_stages = {};
-
-// A finir
-/*
-                var stages = result2.output.stages;
-                output_stages = [];
-                output_stages.push(UpperStageData.stages[0]);
-                var total_mass = UpperStageData.totalMass + result.output.totalMass;
-                var burn = UpperStageData.burn + result.output.burn;
+                var stages = result.output.stages;
+                var output_stages = [];
+                var total_mass = 0;
+                var burn = 0;
+                var total_dv = 0;
+                if(result.data.Upper && result.data.Upper != undefined) {
+                    for(var stage_id in result.data.Upper.stages) {
+                        output_stages.push(result.data.Upper.stages[stage_id]);                        
+                    }
+                    total_mass = result.data.Upper.totalMass;
+                    burn = result.data.Upper.burn;
+                    total_dv = result.data.Upper.stageDv
+                    result.data.Upper = undefined;
+                }
                 for (var i in stages) {
                     output_stages.push(stages[i]);
                 }
-                var total_dv = UpperStageData.stageDv + result.output.stageDv;
+                total_dv += result.output.stageDv;
 
                 var output = {
                     stages: output_stages,
@@ -357,8 +359,7 @@ function MakeRocketW(nb) {
                     burn: burn,
                     stageDv: total_dv,
                 };
-*/
-                self.postMessage({channel: 'result', output: result.output, id: sub_worker_id, data: Global_data});
+                self.postMessage({channel: 'result', output: output, id: sub_worker_id, data: Global_data});
             }
         });
         i++;

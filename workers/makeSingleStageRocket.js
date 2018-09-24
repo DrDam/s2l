@@ -17,7 +17,7 @@ function makeSingleStageRocket() {
                 //console.log(worker_id);
                 //console.log(result);
                 //console.log('******************');
-                self.postMessage({channel: 'result', output: result.output, id: worker_id});
+                self.postMessage({channel: 'result', output: result.output, id: worker_id, data:Global_data});
             }
             if (result.channel == 'wait') {
                 SingleStageWorkersStatus[subworker_id] = 'wait';
