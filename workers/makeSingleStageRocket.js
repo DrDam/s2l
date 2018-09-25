@@ -28,7 +28,6 @@ function makeSingleStageRocket() {
                 SingleStageWorkersStatus[subworker_id] = '';
                 killMe();
             }
-
         });
     }
 }

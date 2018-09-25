@@ -273,8 +273,8 @@ function SearchUnderStage(sub_worker_id) {
     NextData.cu.size = Item.output.size;
 
     NextData.Upper = Item.output;
+    Item = undefined;
 
-    // console.log(NextData);
     RocketWStack[sub_worker_id].postMessage({channel: 'init', data: NextData});
     RocketWStackStatus[sub_worker_id] = 'run';
     RocketWStack[sub_worker_id].postMessage({channel: 'run'});
@@ -342,7 +342,6 @@ function MakeRocketW(nb) {
             if (channel === 'result') {
                 //debug.send(sub_worker_id + ' # send Result');
                 var result = e.data;
-                
                 var output = result.output;
                 var stages = output.stages;
                 var output_stages = [];
