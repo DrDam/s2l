@@ -4,16 +4,16 @@ var startTime = new Date();
 var worker_id;
 var Global_data = {};
 var Global_status = 'run';
-
+if(DEBUG === undefined) {DEBUG = {};}
 function autostop() {
     self.postMessage({channel: 'wait', id: worker_id});
     var stopped = new Date();
     Global_data = null;
-    debug.send(worker_id + ' # wait # ' + round((stopped - startTime) / 1000, 0) + "sec running");
+    DEBUG.send(worker_id + ' # wait # ' + round((stopped - startTime) / 1000, 0) + "sec running");
 }
 
 function killMe() {
-    debug.send(worker_id + ' # killMe');
+    DEBUG.send(worker_id + ' # killMe');
     self.postMessage({channel: 'killMe', id: worker_id});
     Global_data = null;
     close();
@@ -24,24 +24,25 @@ self.addEventListener('message', function (e) {
     var inputs = e.data;
     if (inputs.channel == 'stop') {
         Global_status = 'stop';
-        debug.send(worker_id + ' # to stop');
+        DEBUG.send(worker_id + ' # to stop');
         killMe();
     }
     
     if(inputs.channel == 'create') {
-        debug.setStart(inputs.startTime);
+        DEBUG.setStatus(inputs.debug.status);
+        DEBUG.setStart(inputs.debug.startTime);
         worker_id = inputs.id;
-        debug.send(worker_id + ' # created');
+        DEBUG.send(worker_id + ' # created');
     }
 
     if (inputs.channel == 'init') {
         Global_data = inputs.data;
         startTime = new Date();
-        debug.send(worker_id + ' # init');
+        DEBUG.send(worker_id + ' # init');
         return;
     }
     if (e.data.channel == 'run') {
-        debug.send(worker_id + ' # run');
+        DEBUG.send(worker_id + ' # run');
         drawMeARocket();
         return;
     }

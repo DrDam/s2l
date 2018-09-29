@@ -1,11 +1,7 @@
-var Global_status = "init";
-
 // Jquery
 (function ($) {
     $(document).ready(function () {
-        if(debug === undefined) {debug = {};}
-
-        Global_status = 'wait';
+        if(DEBUG === undefined) {DEBUG = {};}
 
         // toggle information block
         $("#readme_button").click(function () {
@@ -56,6 +52,7 @@ var Global_status = "init";
         var validationData = [];
 
         // Fuel Classification
+        /*
         var FuelTypes = {};
         FuelTypes.LFO = 'Liquid Fuel and Oxydizer';
         FuelTypes.LF = 'LiquidFuel';
@@ -63,7 +60,7 @@ var Global_status = "init";
         FuelTypes.O = 'Oxydizer';
         FuelTypes.M = 'MonoPropellant';
         FuelTypes.X = 'XenonGas';
-
+*/
         // Reactivate action button when the two collection are loaded
         var loadCollectionValidation = function (type) {
             validationData.push(type);
@@ -164,17 +161,13 @@ var Global_status = "init";
             }
             $('#stop').prop('disabled', true);
             $('#start').prop('disabled', false);
-            Global_status = 'stop';
         });
 
         // Binding start Button
         $('#param').submit(function (event) {
 
             var startTime = new Date();
-            console.log('Start Calculations at ' + startTime);
-            debug.setStart(startTime.getTime());
-            debug.send('Worker Id # Message # ', true);
-            Global_status = 'run';
+
             event.preventDefault();
             $('#start').prop('disabled', true);
             $('#stop').prop('disabled', false);
@@ -217,15 +210,15 @@ var Global_status = "init";
                 max: parseFloat(elems.Tmax.value)
             };
 
-            var nbWorkers = parseInt(elems.nbworker.value);
-            nbWorkers = 1;
-// window.navigator.hardwareConcurrency
+            var debug_status = elems.debug.checked;
 
             var simu = {};
-            simu.nbWorker = nbWorkers;
+            simu.nbWorker = 1;
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
-            simu.startTime = startTime.getTime();
+            simu.debug = {};
+            simu.debug.status = debug_status;
+            simu.debug.startTime = startTime.getTime();
 
             var computationData = {
                 SOI: SOI,
@@ -233,11 +226,18 @@ var Global_status = "init";
                 cu: CU,
                 simu: simu,
                 parts: Parts
-                        //      fuelTypes: FuelTypes,
-                        //      sizes: Sizes
+                // fuelTypes: FuelTypes,
+                // sizes: Sizes
             };
 
             var cuHTML = makeCuHtml(CU, Sizes);
+            
+            // Start Debug
+            console.log('Start Calculations at ' + startTime);
+            DEBUG.setStatus(debug_status)
+            DEBUG.setStart(startTime.getTime());
+            DEBUG.send('Worker Id # Message # ', true);
+            
             /*
              console.log('###################');
              console.log('input data');
@@ -260,7 +260,7 @@ var Global_status = "init";
                 var nbstages = nbStages + 1;
                 var master_data = clone(computationData);
                 master_data.rocket.stages = nbstages;
-                masters[id].postMessage({channel: 'create', id: id, startTime: startTime.getTime()});
+                masters[id].postMessage({channel: 'create', id: id, debug: simu.debug});
                 masters[id].postMessage({channel: "init", data: master_data});
                 masters[id].postMessage({channel: "run"});
                 masters[id].addEventListener('message', function (e) {
@@ -280,7 +280,7 @@ var Global_status = "init";
                     }
                     if (channel === 'killMe') {
                         var id_to_kill = result.id;
-                        debug.send(id_to_kill + ' # END');
+                        DEBUG.send(id_to_kill + ' # END');
                         masters[id_to_kill] = undefined;
                         var terminated = true;
                         for (var i in masters) {
@@ -315,10 +315,7 @@ var Global_status = "init";
             StagesHTML += data.cuHTML;
             StagesHTML += printStages(data.stages, mass, dv, result_id);
             StagesHTML += "</div>";
-            //debug.send('###################');
-            //debug.send('output to table');
-            //debug.send(data);
-            //debug.send('###################');
+
             resultTable.row.add([result_id, nbStages, mass, Cu_part, dv, StagesHTML]).draw();
         }
 
