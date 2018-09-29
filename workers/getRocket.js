@@ -138,7 +138,7 @@ function drawMeARocket() {
         makeSingleStageRocket();
     }
 
-    // Case 1 : Generate monobloc rocket for specific Dv
+    // Case 2 : Generate monobloc rocket for specific Dv
     if (Global_data.rocket.type === 'mono' && Global_data.rocket.stages > 1) {
         DEBUG.send(worker_id + ' # makeMultipleStageRocket');
         makeMultipleStageRocket();
@@ -341,7 +341,7 @@ function MakeRocketW(nb) {
                 SearchUnderStage(sub_worker_id);
             }
             if (channel === 'result') {
-                //DEBUG.send(sub_worker_id + ' # send Result');
+                DEBUG.send(sub_worker_id + ' # send Result # ' + e.data.hash);
                 var result = e.data;
                 var output = result.output;
                 var stages = output.stages;
@@ -378,7 +378,9 @@ function MakeRocketW(nb) {
                 var allData = upperData;
                 upperData.underData = output;
                 
-                self.postMessage({channel: 'result', output: output, id: worker_id, data: allData});
+                var hash = JSON.stringify(output).hashCode() ;
+                DEBUG.send(worker_id + ' # send to output # ' + hash);
+                self.postMessage({channel: 'result', output: output, id: worker_id, data: allData, hash:hash});
             }
         });
         i++;

@@ -6,10 +6,10 @@ var Global_data = {};
 var Global_status = 'run';
 if(DEBUG === undefined) {DEBUG = {};}
 function autostop() {
-    self.postMessage({channel: 'wait', id: worker_id});
     var stopped = new Date();
     Global_data = null;
     DEBUG.send(worker_id + ' # wait # ' + round((stopped - startTime) / 1000, 0) + "sec running");
+    self.postMessage({channel: 'wait', id: worker_id});
 }
 
 function killMe() {

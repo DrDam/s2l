@@ -211,9 +211,10 @@
             };
 
             var debug_status = elems.debug.checked;
+            var nbWorkers = parseInt(elems.nbworker.value);
 
             var simu = {};
-            simu.nbWorker = 1;
+            simu.nbWorker = nbWorkers;
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
             simu.debug = {};
@@ -276,6 +277,7 @@
                     if (channel === 'wait') {
                         var master_id = result.id;
                         // If Master end all is processing, kill it
+                        DEBUG.send(master_id + ' # Wait');
                         masters[master_id].postMessage({channel: 'stop'});
                     }
                     if (channel === 'killMe') {
@@ -309,7 +311,7 @@
             var mass = round(data.totalMass + data.cu.mass);
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
-            var Cu_part = round(data.cu.mass / mass, 4) * 100;
+            var Cu_part = round(round(data.cu.mass / mass, 4) * 100,2);
 
             var StagesHTML = '<div class="stagesDetails">';
             StagesHTML += data.cuHTML;
