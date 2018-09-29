@@ -277,7 +277,7 @@
                     if (channel === 'wait') {
                         var master_id = result.id;
                         // If Master end all is processing, kill it
-                        DEBUG.send(master_id + ' # Wait');
+                        DEBUG.send(master_id + ' # Send wait');
                         masters[master_id].postMessage({channel: 'stop'});
                     }
                     if (channel === 'killMe') {

@@ -2,6 +2,11 @@
 # Changelog #
 #############
 
+v0.0.13
+- Refactor all Worker processing
+- Add Pagination on result table
+- HTML command for Debug
+
 v0.0.12
 - Foldering sources files
 - Reduice worker number due browser limitation

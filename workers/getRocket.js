@@ -304,13 +304,13 @@ self.addEventListener('UpperStackIsEmpty', function () {
 // Find how many children are running
 function findAllRunningWorker() {
     var counter = 0;
-    for (worker_id in UpperWStackStatus) {
-        if (UpperWStackStatus[worker_id] === 'run') {
+    for (sub_worker_id in UpperWStackStatus) {
+        if (UpperWStackStatus[sub_worker_id] === 'run') {
             counter++;
         }
     }
-    for (worker_id in UpperWStackStatus) {
-        if (RocketWStackStatus[worker_id] === 'run') {
+    for (sub_worker_id in UpperWStackStatus) {
+        if (RocketWStackStatus[sub_worker_id] === 'run') {
             counter++;
         }
     }
@@ -337,7 +337,7 @@ function MakeRocketW(nb) {
                 killMe();
             }
             if (channel === 'wait') {
-                //DEBUG.send(sub_worker_id + ' # send wait');
+                DEBUG.send(sub_worker_id + ' # send wait');
                 SearchUnderStage(sub_worker_id);
             }
             if (channel === 'result') {
