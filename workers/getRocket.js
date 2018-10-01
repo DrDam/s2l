@@ -273,9 +273,15 @@ function SearchUnderStage(sub_worker_id) {
     NextData.cu.mass = Item.output.totalMass;
     NextData.cu.size = Item.output.size;
 
-    NextData.Upper = Item.output;
-    Item = undefined;
+    if(!Item.data.Upper) {
+        NextData.Upper = Item.output;
+    }
+    else {
+        NextData.Upper = addStages(Item.data.Upper, Item.output);
+    }
 
+    Item = undefined;
+        
     RocketWStack[sub_worker_id].postMessage({channel: 'init', data: NextData});
     RocketWStackStatus[sub_worker_id] = 'run';
     RocketWStack[sub_worker_id].postMessage({channel: 'run'});
@@ -344,45 +350,41 @@ function MakeRocketW(nb) {
                 DEBUG.send(sub_worker_id + ' # send Result # ' + e.data.hash);
                 var result = e.data;
                 var output = result.output;
-                var stages = output.stages;
-                var output_stages = [];
-                var total_mass = 0;
-                var burn = 0;
-                var total_dv = 0;
-                // Récupération des étages suppérieurs
-                var upperData = result.data;
-                var Upper = upperData.Upper;
-                for(var stage_id in Upper.stages) {
-                    output_stages.push(Upper.stages[stage_id]);                        
+                
+                if(result.data.Upper.stages) {
+                    var OUTPUT = addStages(result.data.Upper, output);
+                    result.data.Upper = {}
                 }
-                burn = Upper.burn;
-                total_mass = Upper.totalMass;
-                total_dv = Upper.stageDv;
-                Upper = undefined;
+                else {
+                    var OUTPUT = output;
+                }
 
-                // Ajout de l'étage en dessous
-                for (var i in stages) {
-                    output_stages.push(stages[i]);
-                }
-                total_dv += output.stageDv;
-                burn += output.burn;
-                total_mass += output.totalMass;
-                
-                var output = {
-                    stages: output_stages,
-                    nbStages: upperData.originData.stages,
-                    totalMass: total_mass,
-                    burn: burn,
-                    stageDv: total_dv,
-                };
-                var allData = upperData;
-                upperData.underData = output;
-                
-                var hash = JSON.stringify(output).hashCode() ;
+                var hash = JSON.stringify(OUTPUT).hashCode() ;
                 DEBUG.send(worker_id + ' # send to output # ' + hash);
-                self.postMessage({channel: 'result', output: output, id: worker_id, data: allData, hash:hash});
+                self.postMessage({channel: 'result', output: OUTPUT, id: worker_id, data: result.data, hash:hash});
             }
         });
         i++;
     }
+}
+
+// Stack stages
+function addStages(stack, stage) {
+    
+    var newStack = {};
+    newStack.burn = stack.burn + stage.burn;
+    newStack.nbStages = stack.nbStages + stage.nbStages;
+    newStack.size = stage.size;
+    newStack.stageDv = stack.stageDv + stage.stageDv;
+    newStack.totalMass = stack.totalMass + stage.totalMass;
+    newStack.stages = [];
+    
+    for (var i in stack.stages) {
+        newStack.stages.push(stack.stages[i]);
+    }
+   for (var j in stage.stages) {
+        newStack.stages.push(stage.stages[j]);
+    }
+    
+    return newStack;
 }
