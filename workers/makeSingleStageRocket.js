@@ -7,8 +7,10 @@ function makeSingleStageRocket() {
         SingleStageWorkers = generateWorkers('getStage', Global_data.simu.nbWorker);
     }
 
+    var StageData = clone(Global_data);
+    StageData.rocket.bottom = true;
     for (var i in SingleStageWorkers) {
-        SingleStageWorkers[i].postMessage({channel: "init", data: Global_data});
+        SingleStageWorkers[i].postMessage({channel: "init", data: StageData});
         SingleStageWorkers[i].postMessage({channel: "run"});
     }
 }

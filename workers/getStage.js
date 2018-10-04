@@ -78,6 +78,11 @@ function giveMeASingleStage(availableEngines) {
 
     //availableEngines = [availableEngines[8]];
     for (var i in availableEngines) {
+        
+        if(Global_data.rocket.bottom !== true && availableEngines[i].stackable.bottom == false) {
+            continue;
+        }
+        
         if (Global_status == 'stop') {
             return null;
         }
