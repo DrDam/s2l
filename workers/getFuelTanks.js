@@ -6,14 +6,14 @@ function getFuelTankSolution(stageData) {
     if (Global_status == 'stop') {
         return null;
     }
-    
+
     var bestSolution = {};
     var bestOverflow = 999;
     var EnginesNeeded = stageData.engine.caract.conso.proportions;
     var cu_size = stageData.cu.size;
     var engine_size = stageData.engine.stackable.top;
     var Tanks = preSelectTanks(EnginesNeeded);
-    var Adapters = Global_data.parts.adapters;
+    var Adapters = Parts.adapters;
     var localparts = mergeArray(Tanks, Adapters);
 
     var targetSizes = {
@@ -44,11 +44,11 @@ function getFuelTankSolution(stageData) {
 
 function preSelectTanks(EnginesNeeded) {
     var SelectedTanks = [];
-    for (var i in Global_data.parts.fuelTanks) {
+    for (var i in Parts.fuelTanks) {
         if (Global_status == 'stop') {
             return null;
         }
-        var tank = Global_data.parts.fuelTanks[i];
+        var tank = Parts.fuelTanks[i];
 
         // Filters tanks by ressources
         var tankContent = getRessourcesKey(tank.ressources);
@@ -99,11 +99,11 @@ function getValideAssembly(stageData, targetSizes, localParts, nbTanks = 1, stac
                 if (targetSizes.bottom !== current.stackable.bottom) {
                     var finished = false;
                     // Find a adapter
-                    for (var j in Global_data.parts.adapters) {
+                    for (var j in Parts.adapters) {
                         if (Global_status == 'stop') {
                             return null;
                         }
-                        var adapter = Global_data.parts.adapters[j];
+                        var adapter = Parts.adapters[j];
 
                         // Adapter must feat with engin size
                         if (targetSizes.bottom === adapter.stackable.bottom &&

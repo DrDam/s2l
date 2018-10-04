@@ -21,7 +21,7 @@ function generateWorkers(type, nb) {
         var w = new Worker('/workers/' + type + ".js");
         var globalId = worker_id + '--' + type + '--' + i;
         //console.log('Generate woker ' + globalId);
-        w.postMessage({channel: "create", id: globalId, fragment_id:i, debug: Global_data.simu.debug});
+        w.postMessage({channel: "create", id: globalId, fragment_id:i, parts: Parts, debug: Global_data.simu.debug});
         localWorkers[globalId] = w;
         SingleStageWorkers[globalId] = localWorkers[globalId];
         SingleStageWorkersStatus[globalId] = 'created';

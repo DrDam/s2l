@@ -3,6 +3,7 @@ var startTime = new Date();
 // Generate 1 stage Rocket
 var worker_id;
 var Global_data = {};
+var Parts = {};
 var Global_status = 'run';
 var fragment_id = undefined;
 if(DEBUG === undefined) {DEBUG = {};}
@@ -33,7 +34,7 @@ self.addEventListener('message', function (e) {
         DEBUG.setStatus(inputs.debug.status);
         DEBUG.setStart(inputs.debug.startTime);
         worker_id = inputs.id;
-        
+        Parts = inputs.parts;
         if(inputs.fragment_id != undefined) {
             fragment_id = e.data.fragment_id;
         }
@@ -42,6 +43,7 @@ self.addEventListener('message', function (e) {
 
     if (inputs.channel == 'init') {
         Global_data = inputs.data;
+        console.log(Global_data);
         startTime = new Date();
         DEBUG.send(worker_id + ' # init');
         return;
@@ -57,12 +59,12 @@ self.addEventListener('message', function (e) {
 function drawMeARocket() {
     var localengines = [];
     if(fragment_id === undefined) {
-        localengines = Global_data.parts.engines;
+        localengines = Parts.engines;
     }
     else {
-        var fragment_length = Math.ceil(Global_data.parts.engines.length / Global_data.simu.nbWorker);
+        var fragment_length = Math.ceil(Parts.engines.length / Global_data.simu.nbWorker);
         var start = fragment_id * fragment_length;
-        localengines = Global_data.parts.engines.slice(start, start + fragment_length);
+        localengines = Parts.engines.slice(start, start + fragment_length);
     }
 
     giveMeASingleStage(localengines, Global_data.rocket.dv, Global_data.rocket.twr, Global_data.cu, Global_data.SOI.kerbin);
@@ -211,8 +213,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
 }
 
 function getDecoupler(size) {
-    for (var i in Global_data.parts.decouplers) {
-        var decoupler = Global_data.parts.decouplers[i];
+    for (var i in Parts.decouplers) {
+        var decoupler = Parts.decouplers[i];
         if (decoupler.stackable.top == size && decoupler.isOmniDecoupler === false) {
             return decoupler;
         }

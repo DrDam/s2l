@@ -134,7 +134,7 @@
                 rocket: rocket,
                 cu: CU,
                 simu: simu,
-                parts: Parts
+                //parts: Parts
                 // fuelTypes: FuelTypes,
                 // sizes: Sizes
             };
@@ -169,7 +169,7 @@
                 var nbstages = nbStages + 1;
                 var master_data = clone(computationData);
                 master_data.rocket.stages = nbstages;
-                masters[id].postMessage({channel: 'create', id: id, debug: simu.debug});
+                masters[id].postMessage({channel: 'create', parts: Parts, id: id, debug: simu.debug});
                 masters[id].postMessage({channel: "init", data: master_data});
                 masters[id].postMessage({channel: "run"});
                 masters[id].addEventListener('message', function (e) {

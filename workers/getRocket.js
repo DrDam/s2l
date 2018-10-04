@@ -11,7 +11,7 @@ var worker_id;
 
 // Computation data / status
 var Global_data = {};
-
+var Parts = {};
 var Global_status = 'run';
 var startTime = new Date();
 
@@ -71,6 +71,7 @@ function killMe() {
         DEBUG.send(worker_id + ' # killMe');
         self.postMessage({channel: 'killMe', id: worker_id});
         cleanData();
+        Parts = {};
         close();
     }
 }
@@ -107,6 +108,7 @@ self.addEventListener('message', function (e) {
 
     if (inputs.channel === 'create') {
         worker_id = inputs.id;
+        Parts = inputs.parts;
         DEBUG.setStatus(inputs.debug.status);
         DEBUG.setStart(inputs.debug.startTime);
         DEBUG.send(worker_id + ' # created');
@@ -179,7 +181,7 @@ function MakeUpperStageW(nb) {
         var w = new Worker('getStage.js');
         //DEBUG('Generate woker ' + globalId);
         UpperWStack[worker_uid] = w;
-        w.postMessage({channel: 'create', id: worker_uid, debug: Global_data.simu.debug});
+        w.postMessage({channel: 'create', id: worker_uid, parts: Parts, debug: Global_data.simu.debug});
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
             var sub_worker_id = e.data.id;
@@ -332,7 +334,7 @@ function MakeRocketW(nb) {
         var w = new Worker('getRocket.js');
         //DEBUG('Generate woker ' + globalId);
         RocketWStack[worker_uid] = w;
-        w.postMessage({channel: 'create', id: worker_uid, debug: Global_data.simu.debug});
+        w.postMessage({channel: 'create', id: worker_uid, parts: Parts, debug: Global_data.simu.debug});
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
             var sub_worker_id = e.data.id;
