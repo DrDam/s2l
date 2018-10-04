@@ -9,10 +9,7 @@ function getFuelTankSolution(stageData) {
     
     var bestSolution = {};
     var bestOverflow = 999;
-    var EnginesNeeded = {};
-    for (var i in stageData.engine.modes) {
-        EnginesNeeded = stageData.engine.modes[i][0].conso.proportions;
-    }
+    var EnginesNeeded = stageData.engine.caract.conso.proportions;
     var cu_size = stageData.cu.size;
     var engine_size = stageData.engine.stackable.top;
     var Tanks = preSelectTanks(EnginesNeeded);

@@ -64,7 +64,7 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         var engine = availableEngines[i];
 
         // Get Engine ISP / Thrust
-        var caracts = getEngineCaract(engine);
+        var caracts = engine.caract;
         var curveData = getEngineCurveDateForAtm(caracts, 0);
         var ISP = curveData.ISP;
         var Thrust = curveData.Thrust;
@@ -110,7 +110,7 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         }
         
         // Manage solid Boosters
-        if (engine.modes.SolidBooster) {
+        if (engine.caract.type == 'SolidBooster') {
             if (Mcarbu > 0) {
                 // not enough solid fuel in engine 
                 continue;
@@ -203,13 +203,6 @@ function getDecoupler(size) {
         }
     }
     return null;
-}
-
-function getEngineCaract(engine) {
-    var modes = engine.modes;
-    for (var mode_id in modes) {
-        return modes[mode_id][0];
-    }
 }
 
 function getEngineCurveDateForAtm(engineCaracts, AtmPressur) {
