@@ -43,7 +43,6 @@ self.addEventListener('message', function (e) {
 
     if (inputs.channel == 'init') {
         Global_data = inputs.data;
-        console.log(Global_data);
         startTime = new Date();
         DEBUG.send(worker_id + ' # init');
         return;
@@ -67,11 +66,15 @@ function drawMeARocket() {
         localengines = Parts.engines.slice(start, start + fragment_length);
     }
 
-    giveMeASingleStage(localengines, Global_data.rocket.dv, Global_data.rocket.twr, Global_data.cu, Global_data.SOI.kerbin);
+    giveMeASingleStage(localengines);
     setTimeout(function(){ autostop(); }, 10);
 }
 
-function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
+function giveMeASingleStage(availableEngines) {
+    
+    var targetDv = clone(Global_data.rocket.dv);
+    var twr = clone(Global_data.rocket.twr);
+    var SOI = clone(Global_data.SOI.kerbin);
 
     //availableEngines = [availableEngines[8]];
     for (var i in availableEngines) {
@@ -85,7 +88,8 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
         var curveData = getEngineCurveDateForAtm(caracts, 0);
         var ISP = curveData.ISP;
         var Thrust = curveData.Thrust;
-
+        var cu = clone(Global_data.cu);
+        
         // Add decoupler mass
         var decoupler = {};
         decoupler = getDecoupler(cu.size);
@@ -164,10 +168,12 @@ function giveMeASingleStage(availableEngines, targetDv, twr, cu, SOI) {
             if (TankSolution === null) {
                 continue;
             }
-            //console.log('###########');
-            //console.log(stageDataForTank);
-            //console.log(TankSolution);
-            //console.log('###########');
+            /*
+            console.log('#### FUEL TANK SOLUTION #####');
+            console.log(stageDataForTank);
+            console.log(TankSolution);
+            console.log('###########');
+            */
         } else {
             TankSolution.mFuel = 0;
             TankSolution.mDry = 0;
