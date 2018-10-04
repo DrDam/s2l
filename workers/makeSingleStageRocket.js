@@ -4,7 +4,7 @@ function makeSingleStageRocket() {
 
     if (SingleStageWorkersCreated === false) {
         SingleStageWorkersCreated = true;
-        SingleStageWorkers = generateWorkers('getStage', 1);
+        SingleStageWorkers = generateWorkers('getStage', Global_data.simu.nbWorker);
     }
 
     for (var i in SingleStageWorkers) {
@@ -19,9 +19,9 @@ function generateWorkers(type, nb) {
     var i = 0;
     while (i < nb) {
         var w = new Worker('/workers/' + type + ".js");
-        var globalId = worker_id + '--' + type;
+        var globalId = worker_id + '--' + type + '--' + i;
         //console.log('Generate woker ' + globalId);
-        w.postMessage({channel: "create", id: globalId, debug: Global_data.simu.debug});
+        w.postMessage({channel: "create", id: globalId, fragment_id:i, debug: Global_data.simu.debug});
         localWorkers[globalId] = w;
         SingleStageWorkers[globalId] = localWorkers[globalId];
         SingleStageWorkersStatus[globalId] = 'created';

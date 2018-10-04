@@ -4,6 +4,7 @@ var startTime = new Date();
 var worker_id;
 var Global_data = {};
 var Global_status = 'run';
+var fragment_id = undefined;
 if(DEBUG === undefined) {DEBUG = {};}
 function autostop() {
     var stopped = new Date();
@@ -32,6 +33,10 @@ self.addEventListener('message', function (e) {
         DEBUG.setStatus(inputs.debug.status);
         DEBUG.setStart(inputs.debug.startTime);
         worker_id = inputs.id;
+        
+        if(inputs.fragment_id != undefined) {
+            fragment_id = e.data.fragment_id;
+        }
         DEBUG.send(worker_id + ' # created');
     }
 
@@ -50,7 +55,17 @@ self.addEventListener('message', function (e) {
 
 // Processing functions
 function drawMeARocket() {
-    giveMeASingleStage(Global_data.parts.engines, Global_data.rocket.dv, Global_data.rocket.twr, Global_data.cu, Global_data.SOI.kerbin);
+    var localengines = [];
+    if(fragment_id === undefined) {
+        localengines = Global_data.parts.engines;
+    }
+    else {
+        var fragment_length = Math.ceil(Global_data.parts.engines.length / Global_data.simu.nbWorker);
+        var start = fragment_id * fragment_length;
+        localengines = Global_data.parts.engines.slice(start, start + fragment_length);
+    }
+
+    giveMeASingleStage(localengines, Global_data.rocket.dv, Global_data.rocket.twr, Global_data.cu, Global_data.SOI.kerbin);
     setTimeout(function(){ autostop(); }, 10);
 }
 
