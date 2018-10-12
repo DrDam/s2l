@@ -1,7 +1,9 @@
 // Jquery
 (function ($) {
     $(document).ready(function () {
-        if(DEBUG === undefined) {DEBUG = {};}
+        if (DEBUG === undefined) {
+            DEBUG = {};
+        }
 
         // toggle information block
         $("#readme_button").click(function () {
@@ -50,6 +52,11 @@
         var resultTable = null;
         var result_id = 0;
 
+        // See Details of a stage
+        $('#results').on('click', 'tbody td', function () {
+            $(this).parent().find("td:last-child").toggleClass("show");
+        });
+
         // Prepare stage templating
         var stageTPL = null;
         $.get('tpl/stages.html.tpl', function (data) {
@@ -59,7 +66,7 @@
         $.get('tpl/cu.html.tpl', function (data) {
             cuTPL = data;
         }, 'text');
-
+        var cuHTML = null;
         // Binding Stop button
         $('#stop').click(function () {
             for (var i in masters) {
@@ -73,10 +80,12 @@
 
         // Binding start Button
         $('#param').submit(function (event) {
+            // Prevent default
+            event.preventDefault();
 
+            // Set Start Time
             var startTime = new Date();
 
-            event.preventDefault();
             $('#start').prop('disabled', true);
             $('#stop').prop('disabled', false);
 
@@ -115,7 +124,7 @@
             rocket.stages = parseInt(elems.nbStage.value);
             rocket.twr = {
                 min: parseFloat(elems.Tmin.value),
-                max: parseFloat(elems.Tmax.value)
+                max: (elems.Tmax.value != '') ? parseFloat(elems.Tmax.value) : undefined
             };
 
             var debug_status = elems.debug.checked;
@@ -134,92 +143,84 @@
                 rocket: rocket,
                 cu: CU,
                 simu: simu,
-                //parts: Parts
-                // fuelTypes: FuelTypes,
-                // sizes: Sizes
             };
 
-            var cuHTML = makeCuHtml(CU, Sizes);
-            
+            cuHTML = makeCuHtml(CU, Sizes);
+
             // Start Debug
             console.log('Start Calculations at ' + startTime);
             DEBUG.setStatus(debug_status)
             DEBUG.setStart(startTime.getTime());
             DEBUG.send('Worker Id # Message # ', true);
-            
+
             /*
              console.log('###################');
              console.log('input data');
              console.log(computationData);
              console.log('###################');
              */
-            var nbStage;
-            result_id = 0;
-            masters = [];
-            // Create workers
-            for (nbStage = 0; nbStage < computationData.rocket.stages; nbStage++) {
-                var w = new Worker("workers/getRocket.js");
 
-                var master_id = "master-" + nbStage;
-                masters[master_id] = w;
-            }
-            // Launch simulation for each stage
-            var nbStages = 0;
-            for (var id in masters) {
-                var nbstages = nbStages + 1;
-                var master_data = clone(computationData);
-                master_data.rocket.stages = nbstages;
-                masters[id].postMessage({channel: 'create', parts: Parts, id: id, debug: simu.debug});
-                masters[id].postMessage({channel: "init", data: master_data});
-                masters[id].postMessage({channel: "run"});
-                masters[id].addEventListener('message', function (e) {
-                    var result = e.data;
-                    var channel = result.channel;
-                    if (channel === 'result') {
-                        //console.log(e.data.output);
-                        var dataToTable = e.data.output;
-                        dataToTable.cu = computationData.cu;
-                        dataToTable.cuHTML = cuHTML;
-                        updateDom(dataToTable);
-                    }
-                    if (channel === 'wait') {
-                        var master_id = result.id;
-                        // If Master end all is processing, kill it
-                        DEBUG.send(master_id + ' # Send wait');
-                        masters[master_id].postMessage({channel: 'stop'});
-                    }
-                    if (channel === 'killMe') {
-                        var id_to_kill = result.id;
-                        DEBUG.send(id_to_kill + ' # END');
-                        masters[id_to_kill] = undefined;
-                        var terminated = true;
-                        for (var i in masters) {
-                            if (masters[i] !== undefined) {
-                                terminated = false;
-                            }
-                        }
-                        if (terminated === true) {
-                            console.log('END Calculations at ' + new Date());
-                            $('#stop').prop('disabled', true);
-                            $('#start').prop('disabled', false);
-                        }
-                    }
-                });
-                nbStages++;
-            }
+            // Create workers
+            searchRockets(1, computationData);
+
+            // Show table
             $('html, body').animate({
                 scrollTop: $("#results").offset().top
             }, 1000);
+
+            // Prevent default
             return false;
         });
 
+        function searchRockets(nbStages, computationData) {
+            var master = new Worker("workers/getRocket.js");
+            var master_id = "master-" + nbStages;
+
+            var master_data = clone(computationData);
+            master_data.rocket.stages = nbStages;
+            master.postMessage({channel: 'create', parts: Parts, id: master_id, debug: computationData.simu.debug});
+            master.postMessage({channel: "init", data: master_data});
+            master.addEventListener('message', function (e) {
+                var result = e.data;
+                var channel = result.channel;
+                if (channel === 'result') {
+                    //console.log(e.data.output);
+                    var dataToTable = e.data.output;
+                    dataToTable.cu = computationData.cu;
+                    dataToTable.cuHTML = cuHTML;
+                    updateDom(dataToTable);
+                }
+                if (channel === 'wait') {
+                    var master_id = result.id;
+                    // If Master end all is processing, kill it
+                    DEBUG.send(master_id + ' # Send wait');
+                    master.postMessage({channel: 'stop'});
+                }
+                if (channel === 'killMe') {
+                    var id_to_kill = result.id;
+                    DEBUG.send(id_to_kill + ' # END');
+                    master = undefined;
+                    if (computationData.rocket.stages >= nbStages + 1) {
+                        searchRockets(nbStages + 1, computationData)
+                    } else {
+                        console.log('END Calculations at ' + new Date());
+                        $('#stop').prop('disabled', true);
+                        $('#start').prop('disabled', false);
+                    }
+                }
+            });
+            master.postMessage({channel: "run"});
+        }
+
+
         // Add a row in table
+        var result_id = 0;
         function updateDom(data) {
             result_id++;
             var mass = round(data.totalMass + data.cu.mass);
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
-            var Cu_part = round(round(data.cu.mass / mass, 4) * 100,2);
+            var Cu_part = round(round(data.cu.mass / mass, 4) * 100, 2);
 
             var StagesHTML = '<div class="stagesDetails">';
             StagesHTML += data.cuHTML;
@@ -229,6 +230,7 @@
             resultTable.row.add([result_id, nbStages, mass, Cu_part, dv, StagesHTML]).draw();
         }
 
+        // Render stage to table
         function printStages(stages, fullMass, fullDv, result_id) {
             var output = '';
             for (var i in stages) {
@@ -266,6 +268,7 @@
             return output;
         }
 
+        // Render CU stage
         function makeCuHtml(cu, sizes) {
             var output = '';
 
@@ -283,11 +286,6 @@
 
             return output;
         }
-
-        // See Details
-        $('#results').on('click', 'tbody td', function () {
-            $(this).parent().find("td:last-child").toggleClass("show");
-        });
 
     });
 })(jQuery);

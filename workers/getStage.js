@@ -87,10 +87,10 @@ function giveMeASingleStage(availableEngines) {
             return null;
         }
         var engine = availableEngines[i];
-
         // Get Engine ISP / Thrust
         var caracts = engine.caract;
-        var curveData = getEngineCurveDateForAtm(caracts, 0);
+        // @TODO : Add Atm curve
+        var curveData = getEngineCurveDateForAtm(caracts, 1);
         var ISP = curveData.ISP;
         var Thrust = curveData.Thrust;
         var cu = clone(Global_data.cu);
@@ -113,8 +113,8 @@ function giveMeASingleStage(availableEngines) {
         // Prepare Masses values
         var MassEngineFull = engine.mass.full;
         var MassEngineDry = engine.mass.empty;
-        var MstageDry = cu.mass + MassEngineDry + command.mass + decoupler.mass.full;
-        var MstageFull = cu.mass + MassEngineFull + command.mass + decoupler.mass.full;
+        var MstageDry  = cu.mass + decoupler.mass.full + command.mass + MassEngineDry;
+        var MstageFull = cu.mass + decoupler.mass.full + command.mass + MassEngineFull;
 
         // calculate Fuel mass for the needed for Dv
         var DvFactor = Math.exp(targetDv / (ISP * SOI.Go));
@@ -172,6 +172,9 @@ function giveMeASingleStage(availableEngines) {
             TankSolution = getFuelTankSolution(stageDataForTank);
             if (TankSolution === null) {
                 continue;
+            }
+            else {
+                console.log(stageDataForTank);
             }
             /*
             console.log('#### FUEL TANK SOLUTION #####');
@@ -243,7 +246,9 @@ function getEngineCurveDateForAtm(engineCaracts, AtmPressur) {
     }
 }
 
+
 function testTwr(Thrust, Mass, target, Go) {
     var Twr = Thrust / Mass / Go;
-    return(Twr > target.min && Twr < target.max);
+ 
+    return(Twr > target.min && ( !target.max || Twr < target.max));
 }
