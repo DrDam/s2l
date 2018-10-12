@@ -53,7 +53,7 @@
         var result_id = 0;
 
         // See Details of a stage
-        $('#results').on('click', 'tbody td', function () {
+        $('#results table').on('click', 'tbody td', function () {
             $(this).parent().find("td:last-child").toggleClass("show");
         });
 
@@ -91,7 +91,7 @@
 
             if (resultTable === null) {
                 $('#results').show();
-                resultTable = $('#results').DataTable({
+                resultTable = $('#results table').DataTable({
                     searching: false,
                     language: {
                         emptyTable: "No configuration found from your specifications"
@@ -196,6 +196,9 @@
                     DEBUG.send(master_id + ' # Send wait');
                     master.postMessage({channel: 'stop'});
                 }
+                if (channel === 'badDesign') {
+                    updateCounter();
+                }
                 if (channel === 'killMe') {
                     var id_to_kill = result.id;
                     DEBUG.send(id_to_kill + ' # END');
@@ -228,6 +231,7 @@
             StagesHTML += "</div>";
 
             resultTable.row.add([result_id, nbStages, mass, Cu_part, dv, StagesHTML]).draw();
+            updateCounter();
         }
 
         // Render stage to table
@@ -285,6 +289,12 @@
             output += rendered;
 
             return output;
+        }
+        
+        var config_count = 0;
+        function updateCounter() {
+            config_count++;
+            $('#tested').html(config_count);
         }
 
     });

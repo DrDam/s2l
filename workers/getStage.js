@@ -80,6 +80,7 @@ function giveMeASingleStage(availableEngines) {
     for (var i in availableEngines) {
         
         if(Global_data.rocket.bottom !== true && availableEngines[i].stackable.bottom == false) {
+            self.postMessage({channel: 'badDesign'});
             continue;
         }
         
@@ -139,6 +140,7 @@ function giveMeASingleStage(availableEngines) {
         if (engine.caract.type == 'SolidBooster') {
             if (Mcarbu > 0) {
                 // not enough solid fuel in engine 
+                self.postMessage({channel: 'badDesign'});
                 continue;
             } else {
                 // Booster get enougth dv
@@ -148,6 +150,7 @@ function giveMeASingleStage(availableEngines) {
 
         // Get Out engines where Mcarbu outrise twr
         if (!testTwr(Thrust, MstageFull + Mcarbu, twr, SOI.Go)) {
+            self.postMessage({channel: 'badDesign'});
             continue;
         }
         
@@ -171,10 +174,11 @@ function giveMeASingleStage(availableEngines) {
 
             TankSolution = getFuelTankSolution(stageDataForTank);
             if (TankSolution === null) {
+                self.postMessage({channel: 'badDesign'});
                 continue;
             }
             else {
-                console.log(stageDataForTank);
+            //    console.log(stageDataForTank);
             }
             /*
             console.log('#### FUEL TANK SOLUTION #####');

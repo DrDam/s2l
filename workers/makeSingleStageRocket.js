@@ -43,6 +43,9 @@ function generateWorkers(type, nb) {
                 SingleStageWorkersStatus[subworker_id] = 'wait';
                 autostop();
             }
+            if (result.channel == 'badDesign') {
+                self.postMessage({channel: 'badDesign'});
+            }
             if (result.channel == 'killMe') {
                 SingleStageWorkers[subworker_id] = undefined;
                 SingleStageWorkersStatus[subworker_id] = '';

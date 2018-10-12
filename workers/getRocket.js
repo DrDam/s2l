@@ -185,6 +185,9 @@ function MakeUpperStageW(nb) {
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
             var sub_worker_id = e.data.id;
+            if (channel == 'badDesign') {
+                self.postMessage({channel: 'badDesign'});
+            }
             if (channel === 'killMe') {
                 UpperWStack[sub_worker_id] = undefined;
                 UpperWStackStatus[sub_worker_id] = '';
@@ -338,6 +341,9 @@ function MakeRocketW(nb) {
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
             var sub_worker_id = e.data.id;
+            if (channel == 'badDesign') {
+                self.postMessage({channel: 'badDesign'});
+            }
             if (channel === 'killMe') {
                 DEBUG.send(sub_worker_id + ' # send killMe');
                 RocketWStack[sub_worker_id] = undefined;
@@ -353,7 +359,7 @@ function MakeRocketW(nb) {
                 var result = e.data;
                 var output = result.output;
                 
-                if(result.data.Upper.stages) {
+                if(result.data.Upper) {
                     var OUTPUT = addStages(result.data.Upper, output);
                     result.data.Upper = {}
                 }

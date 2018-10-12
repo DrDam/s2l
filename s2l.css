@@ -4,7 +4,14 @@
 #results {
   width: 100%;
   margin-top: 10px;
+  display:none
 }
+
+#count {
+    text-align: center;
+    font-weight: bold;
+}
+
 #results tbody tr,
 #results thead tr {
   background-color: lightgrey;
