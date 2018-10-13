@@ -3,7 +3,9 @@
     $(document).ready(function () {
         var config_count = 0;
         var valid_count = 0;
+        var result_id = 0;
         
+        var master;
         if (DEBUG === undefined) {
             DEBUG = {};
         }
@@ -48,9 +50,6 @@
             $('#sizeCU').append($('<option>', data));
         });
 
-        //  Workers configuration
-        var masters = [];
-
         // Table initialisation
         var resultTable = null;
         var result_id = 0;
@@ -72,11 +71,9 @@
         var cuHTML = null;
         // Binding Stop button
         $('#stop').click(function () {
-            for (var i in masters) {
-                if (masters[i] !== undefined) {
-                    masters[i].postMessage({channel: "stop"});
-                }
-            }
+            // Kill Calculation
+            master.terminate();
+            console.log('END Calculations at ' + new Date());
             $('#stop').prop('disabled', true);
             $('#start').prop('disabled', false);
         });
@@ -84,7 +81,8 @@
         // Binding start Button
         $('#param').submit(function (event) {
             config_count = 0;
-            
+            valid_count = 0;
+            result_id = 0;
             // Prevent default
             event.preventDefault();
 
@@ -95,21 +93,21 @@
             $('#stop').prop('disabled', false);
 
             if (resultTable === null) {
-                $('#results').show();
-                resultTable = $('#results table').DataTable({
-                    searching: false,
-                    language: {
-                        emptyTable: "No configuration found from your specifications"
-                    },
-                    order: [[3, "desc"]],
-                    columnDefs: [
-                        {width: 50, targets: 0},
-                        {width: 100, targets: [1, 2]},
-                        {width: 200, targets: [3, 4]}
+            $('#results').show();
+            resultTable = $('#results table').DataTable({
+                searching: false,
+                language: {
+                    emptyTable: "No configuration found from your specifications"
+                },
+                order: [[3, "desc"]],
+                columnDefs: [
+                    {width: 50, targets: 0},
+                    {width: 100, targets: [1, 2]},
+                    {width: 200, targets: [3, 4]}
 
-                    ],
-                    fixedColumns: true
-                });
+                ],
+                fixedColumns: true
+            });
             }
             resultTable.clear().draw();
 
@@ -178,7 +176,7 @@
         });
 
         function searchRockets(nbStages, computationData) {
-            var master = new Worker("workers/getRocket.js");
+            master = new Worker("workers/getRocket.js");
             var master_id = "master-" + nbStages;
 
             var master_data = clone(computationData);
@@ -223,7 +221,6 @@
 
 
         // Add a row in table
-        var result_id = 0;
         function updateDom(data) {
             result_id++;
             var mass = round(data.totalMass + data.cu.mass);
