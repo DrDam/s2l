@@ -16,14 +16,14 @@
 <body>
 
     <h1>Draw me a launcher</h1>
-    <p>v0.0.14</p>
+    <p>v0.0.15</p>
     <a href="plan.txt" target="_blank">developpement plan</a>
     <a href="changelog.txt" target="_blank">changelog</a>    <br>
     <button id="readme_button" title="Purpose" type="button">Purpose & Actual Limitation</button>
     <div id="readme" style="display:none">
         <label>This is a "rocket configuration generator"</label>
         <ul>
-            <li>Model are not "atm" proof ( ISP / Thrust used are for void)</li>
+            <li>Model are "only atm" capacity ( ISP / Thrust)</li>
             <li>The generator not using Jet Engine</li>
             <li>Use only staged Engines ( not radials)</li>
         </ul>
@@ -35,7 +35,7 @@
     <label>Utility Charge</label>
     <ul>
         <li>
-            <label>Utility Charge Mass (t)</label><input id="Mu" name="Mu" type="text" value="10"/>
+            <label>Utility Charge Mass (t)</label><input id="Mu" name="Mu" type="text" value="5"/>
         </li>
        <li>
             <label>Needed fairing Diametrer for utility charge</label>
@@ -47,7 +47,7 @@
     <label>Mission</label>
     <ul>
         <li>
-            <label>Launcher Capacity tageted (m/s)</label><input id="DvCible" name="DvCible" type="text" value="4500"/>
+            <label>Launcher Capacity tageted (m/s)</label><input id="DvCible" name="DvCible" type="text" value="4000"/>
         </li>
     </ul>
     <label> Launcher </label>
@@ -95,7 +95,7 @@
 
 <div id=results>
     <div id="count">
-        <span id="tested"></span> configurations tested.
+        <span id="valid"></span> valid configrations among <span id="tested"></span> tested.
     </div>
     <table class="table-bordered table-striped table" >
         <thead>

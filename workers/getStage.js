@@ -76,7 +76,6 @@ function giveMeASingleStage(availableEngines) {
     var twr = clone(Global_data.rocket.twr);
     var SOI = clone(Global_data.SOI.kerbin);
 
-    //availableEngines = [availableEngines[8]];
     for (var i in availableEngines) {
         
         if(Global_data.rocket.bottom !== true && availableEngines[i].stackable.bottom == false) {
@@ -139,6 +138,7 @@ function giveMeASingleStage(availableEngines) {
         // Manage solid Boosters
         if (engine.caract.type == 'SolidBooster') {
             if (Mcarbu > 0) {
+                //console.log('=>  OUT not enought powder');
                 // not enough solid fuel in engine 
                 self.postMessage({channel: 'badDesign'});
                 continue;
@@ -147,9 +147,10 @@ function giveMeASingleStage(availableEngines) {
                 no_tank = true;
             }
         }
-
+        
         // Get Out engines where Mcarbu outrise twr
         if (!testTwr(Thrust, MstageFull + Mcarbu, twr, SOI.Go)) {
+            //console.log('=>  OUT not enought TWR (' + Thrust / (MstageFull + Mcarbu) / SOI.Go + ')' );
             self.postMessage({channel: 'badDesign'});
             continue;
         }
@@ -171,9 +172,10 @@ function giveMeASingleStage(availableEngines) {
                 twr: twr,
                 Go: SOI.Go
             };
-
+            //console.log(' TESTING ' + availableEngines[i].name + '(' + availableEngines[i].id + ')');
             TankSolution = getFuelTankSolution(stageDataForTank);
             if (TankSolution === null) {
+                //console.log('=>  OUT not tank solution' );
                 self.postMessage({channel: 'badDesign'});
                 continue;
             }
@@ -253,6 +255,11 @@ function getEngineCurveDateForAtm(engineCaracts, AtmPressur) {
 
 function testTwr(Thrust, Mass, target, Go) {
     var Twr = Thrust / Mass / Go;
- 
-    return(Twr > target.min && ( !target.max || Twr < target.max));
+
+    if(!target.max) {
+        return Twr > target.min;
+    }
+    else {
+        return(Twr > target.min &&  Twr < target.max);
+    }
 }

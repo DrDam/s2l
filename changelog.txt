@@ -2,6 +2,13 @@
 # Changelog #
 #############
 
+v0.0.15
+- Correct on parts
+- Optimizations
+- Atmospheric flight by default
+- Add configuration tested counter
+- Add multi-engine possibility for main stage
+
 v0.0.14
 - Correct multistage staging
 - Clean includes

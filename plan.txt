@@ -6,7 +6,7 @@ Current Step :
 v0.1 : Initial POC
 - Generate Nstage launcher configurations ( like SpaceX Falcon 9 )
 - with :
--- selection of the single engine of each stage
+-- selection of the engines of each stage (1 per upper stage, possible multi in first Stage)
 -- selection of fuel tanks
 - List all configuration in a comparative table
 

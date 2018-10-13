@@ -1,6 +1,9 @@
 // Jquery
 (function ($) {
     $(document).ready(function () {
+        var config_count = 0;
+        var valid_count = 0;
+        
         if (DEBUG === undefined) {
             DEBUG = {};
         }
@@ -23,12 +26,12 @@
         });
 
         var Sizes = [
-            {id: 'size0', label: 'Tiny - 0.625m'},
-            {id: 'size1', label: 'Small - 1.25m'},
-            {id: 'size1p5', label: 'Medium - 1.875m'},
-            {id: 'size2', label: 'Large - 2.5m'},
-            {id: 'size3', label: 'Extra Large - 3.75m'},
-            {id: 'size4', label: 'Huge - 5m'},
+            {id: '0', label: 'Tiny - 0.625m'},
+            {id: '1', label: 'Small - 1.25m'},
+            {id: '1p5', label: 'Medium - 1.875m'},
+            {id: '2', label: 'Large - 2.5m'},
+            {id: '3', label: 'Extra Large - 3.75m'},
+            {id: '4', label: 'Huge - 5m'},
             {id: 'mk1', label: 'Mk1 - 5m'},
             {id: 'mk2', label: 'Mk2'},
             {id: 'mk3', label: 'Mk3'}
@@ -39,7 +42,7 @@
                 value: item.id,
                 text: item.label
             };
-            if (item.id === 'size1') {
+            if (item.id === '1') {
                 data.selected = 'selected';
             }
             $('#sizeCU').append($('<option>', data));
@@ -80,6 +83,8 @@
 
         // Binding start Button
         $('#param').submit(function (event) {
+            config_count = 0;
+            
             // Prevent default
             event.preventDefault();
 
@@ -188,6 +193,7 @@
                     var dataToTable = e.data.output;
                     dataToTable.cu = computationData.cu;
                     dataToTable.cuHTML = cuHTML;
+                    valid_count++;
                     updateDom(dataToTable);
                 }
                 if (channel === 'wait') {
@@ -291,9 +297,9 @@
             return output;
         }
         
-        var config_count = 0;
         function updateCounter() {
             config_count++;
+            $('#valid').html(valid_count);
             $('#tested').html(config_count);
         }
 

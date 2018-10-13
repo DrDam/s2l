@@ -6,7 +6,7 @@ function getFuelTankSolution(stageData) {
     if (Global_status == 'stop') {
         return null;
     }
-
+    //console.log(' Making fuel tank for ' + stageData.engine.name + '(' + stageData.engine.id + ')');
     var bestSolution = {};
     var bestOverflow = 999;
     var EnginesNeeded = stageData.engine.caract.conso.proportions;
