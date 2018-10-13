@@ -15,4 +15,4 @@ further step :
 - Add hypothesis of atmos-flying
 - Add DLC's Engine plate capacity
 - Add "guidance solution" and "desorbiting fuel" for last stage
-- Add booster propostion in last stage
+- Add booster propostion in first stage
