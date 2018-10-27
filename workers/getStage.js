@@ -180,7 +180,7 @@ function giveMeASingleStage(availableEngines) {
                 continue;
             }
             else {
-            //    console.log(stageDataForTank);
+                //console.log(stageDataForTank);
             }
             /*
             console.log('#### FUEL TANK SOLUTION #####');

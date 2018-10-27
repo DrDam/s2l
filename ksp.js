@@ -4,6 +4,7 @@
         var config_count = 0;
         var valid_count = 0;
         var result_id = 0;
+        var computationData = {};
         
         var master;
         if (DEBUG === undefined) {
@@ -78,7 +79,13 @@
             $('#start').prop('disabled', false);
         });
 
-        // Binding start Button
+        /**
+         * 
+         * 
+         * Submit FORM => Start
+         * 
+         * 
+         */
         $('#param').submit(function (event) {
             config_count = 0;
             valid_count = 0;
@@ -88,7 +95,6 @@
 
             // Set Start Time
             var startTime = new Date();
-
             $('#start').prop('disabled', true);
             $('#stop').prop('disabled', false);
 
@@ -141,7 +147,7 @@
             simu.debug.status = debug_status;
             simu.debug.startTime = startTime.getTime();
 
-            var computationData = {
+            computationData = {
                 SOI: SOI,
                 rocket: rocket,
                 cu: CU,
@@ -163,19 +169,51 @@
              console.log('###################');
              */
 
-            // Create workers
-            searchRockets(1, computationData);
+            // Create FuelTanksStack
+            // Which launch calculation when finished
+            makeFuelTanksStack(simu.maxTanks, simu.debug);
+            // Prevent default
+            return false;
+        });
+        
+        // Make fuelTanks Stacks
+        function makeFuelTanksStack(nbTanks, debug) {
+            var tanksMaker = new Worker("workers/makeFuelTanksStack.js");
+            tanksMaker.postMessage({channel: 'create', parts: Parts.fuelTanks.concat(Parts.adapters), nbTanks: nbTanks, id: 'tankMaker', debug: debug});
+            tanksMaker.addEventListener('message', function (e) {
+                var result = e.data;
+                var channel = result.channel;
+                if (channel === 'info') {
+                    var message = "Contacting Werner Von Kermal for tanks stack with "+result.nb+" parts.";
+                    $('#message').html(message);
+                }
+                if (channel === 'result') {
+                    Parts.fuelTanksStacks = result.stacks;
+                    //console.log(result.stacks.length);
+                    tanksMaker.terminate();
+                    tanksMaker = undefined;
+                    makeRockets();
+                }
+            });
+            
+            tanksMaker.postMessage({channel: "run"});
+            
+        }
+        
+        // Launch making rockets
+        function makeRockets() {
+            searchRockets(1);
+
+            $('#message').html("Recruiting Kerbals Ingineer");
 
             // Show table
             $('html, body').animate({
                 scrollTop: $("#results").offset().top
             }, 1000);
-
-            // Prevent default
-            return false;
-        });
-
-        function searchRockets(nbStages, computationData) {
+        }
+        
+        // Search all rockets
+        function searchRockets(nbStages) {
             master = new Worker("workers/getRocket.js");
             var master_id = "master-" + nbStages;
 
@@ -296,8 +334,8 @@
         
         function updateCounter() {
             config_count++;
-            $('#valid').html(valid_count);
-            $('#tested').html(config_count);
+            var message = valid_count +" valid configrations among "+config_count+" tested.";
+            $('#message').html(message);
         }
 
     });
