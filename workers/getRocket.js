@@ -218,6 +218,8 @@ function SearchUpperStage(sub_worker_id) {
     var upperStageDv = RepartitionStack.shift();
     if (upperStageDv === undefined) {
         UpperWStackStatus[sub_worker_id] = 'wait';
+        // Note : case when UpperStack generation not found result or too long and shift to rapidly so empty before upperCalculation ended
+        VerifyAutostop();
         return;
     }
 
@@ -286,7 +288,7 @@ function SearchUnderStage(sub_worker_id) {
     }
 
     Item = undefined;
-        
+
     RocketWStack[sub_worker_id].postMessage({channel: 'init', data: NextData});
     RocketWStackStatus[sub_worker_id] = 'run';
     RocketWStack[sub_worker_id].postMessage({channel: 'run'});
@@ -301,33 +303,9 @@ self.addEventListener('UpperStackIsEmpty', function () {
 
     DEBUG.send(worker_id + ' # UpperResultStack is Empty');
 
-    var nbRunning = findAllRunningWorker();
-
-    if ((RepartitionStack.length === 0 &&
-            UpperResultStack.length === 0 &&
-            nbRunning === 0) || Global_status === 'stop')
-    {
-        // Normal Stopping
-        autostop();
-    }
+    // If there is nothing to compute, verify if end are possible
+    VerifyAutostop();
 });
-
-// Find how many children are running
-function findAllRunningWorker() {
-    var counter = 0;
-    for (sub_worker_id in UpperWStackStatus) {
-        if (UpperWStackStatus[sub_worker_id] === 'run') {
-            counter++;
-        }
-    }
-    for (sub_worker_id in UpperWStackStatus) {
-        if (RocketWStackStatus[sub_worker_id] === 'run') {
-            counter++;
-        }
-    }
-    return counter;
-}
-
 
 function MakeRocketW(nb) {
     var i = 0;
@@ -366,7 +344,9 @@ function MakeRocketW(nb) {
                 else {
                     var OUTPUT = output;
                 }
-
+                
+                // Note : OUTPUT.size are equal to false when engine are not "bottom stackable"
+                
                 var hash = JSON.stringify(OUTPUT).hashCode() ;
                 DEBUG.send(worker_id + ' # send to output # ' + hash);
                 self.postMessage({channel: 'result', output: OUTPUT, id: worker_id, data: result.data, hash:hash});
@@ -395,4 +375,37 @@ function addStages(stack, stage) {
     }
     
     return newStack;
+}
+
+/******************/
+/** End condition */
+/******************/
+
+// control if with need autostop
+function VerifyAutostop() {
+    var nbRunning = findAllRunningWorker();
+
+    if ((RepartitionStack.length === 0 &&
+            UpperResultStack.length === 0 &&
+            nbRunning === 0) || Global_status === 'stop')
+    {
+        // Normal Stopping
+        autostop();
+    }
+}
+
+// Find how many children are running
+function findAllRunningWorker() {
+    var counter = 0;
+    for (sub_worker_id in UpperWStackStatus) {
+        if (UpperWStackStatus[sub_worker_id] === 'run') {
+            counter++;
+        }
+    }
+    for (sub_worker_id in UpperWStackStatus) {
+        if (RocketWStackStatus[sub_worker_id] === 'run') {
+            counter++;
+        }
+    }
+    return counter;
 }

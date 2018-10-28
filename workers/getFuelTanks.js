@@ -68,10 +68,3 @@ function getStackOverflow(stackData, stageData) {
     // Return Dv Overflow
     return Dv - stageData.targetDv;
 }
-function getKeys(obj) {
-    var keys = [];
-    for (var key in obj) {
-        keys.push(key);
-    }
-    return keys;
-}

@@ -1,4 +1,4 @@
-importScripts('../lib/lib.js', 'getFuelTanks.js');
+importScripts('../lib/lib.js');
 var startTime = new Date();
 
 var worker_id;
@@ -27,6 +27,7 @@ self.addEventListener('message', function (e) {
         DEBUG.send(worker_id + ' # run');
         generateStacks();
         self.postMessage({channel:'result', stacks:Stacks});
+        DEBUG.send(worker_id + ' # Finished');
     }
 });
 
@@ -35,7 +36,7 @@ self.addEventListener('message', function (e) {
 /********************/
 function generateStacks() {
     for (var nbTanks = 1; nbTanks <= MaxTanks; nbTanks++) {
-        //console.log('makeAssembly ' + nbTanks);
+        DEBUG.send(worker_id + ' # generate ' + nbTanks + ' parts stacks');
         self.postMessage({channel:'info', nb:nbTanks});
         makeAssembly(1, nbTanks);
     }
@@ -94,12 +95,4 @@ function makeAssembly(nbTanks = 1, localMaxTanks = 1, topSize = null, stack = {}
             makeAssembly(nbTanks+1, localMaxTanks, current.stackable.bottom, localStack);
         }
     }
-}
-
-function getKeys(obj) {
-    var keys = [];
-    for (var key in obj) {
-        keys.push(key);
-    }
-    return keys;
 }

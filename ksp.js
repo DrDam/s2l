@@ -5,7 +5,8 @@
         var valid_count = 0;
         var result_id = 0;
         var computationData = {};
-        
+        var GeneratedStackSize = 0;
+
         var master;
         if (DEBUG === undefined) {
             DEBUG = {};
@@ -99,21 +100,21 @@
             $('#stop').prop('disabled', false);
 
             if (resultTable === null) {
-            $('#results').show();
-            resultTable = $('#results table').DataTable({
-                searching: false,
-                language: {
-                    emptyTable: "No configuration found from your specifications"
-                },
-                order: [[3, "desc"]],
-                columnDefs: [
-                    {width: 50, targets: 0},
-                    {width: 100, targets: [1, 2]},
-                    {width: 200, targets: [3, 4]}
+                $('#results').show();
+                resultTable = $('#results table').DataTable({
+                    searching: false,
+                    language: {
+                        emptyTable: "No configuration found from your specifications"
+                    },
+                    order: [[3, "desc"]],
+                    columnDefs: [
+                        {width: 50, targets: 0},
+                        {width: 100, targets: [1, 2]},
+                        {width: 200, targets: [3, 4]}
 
-                ],
-                fixedColumns: true
-            });
+                    ],
+                    fixedColumns: true
+                });
             }
             resultTable.clear().draw();
 
@@ -155,12 +156,7 @@
             };
 
             cuHTML = makeCuHtml(CU, Sizes);
-
-            // Start Debug
             console.log('Start Calculations at ' + startTime);
-            DEBUG.setStatus(debug_status)
-            DEBUG.setStart(startTime.getTime());
-            DEBUG.send('Worker Id # Message # ', true);
 
             /*
              console.log('###################');
@@ -175,33 +171,40 @@
             // Prevent default
             return false;
         });
-        
+
         // Make fuelTanks Stacks
         function makeFuelTanksStack(nbTanks, debug) {
-            var tanksMaker = new Worker("workers/makeFuelTanksStack.js");
-            tanksMaker.postMessage({channel: 'create', parts: Parts.fuelTanks.concat(Parts.adapters), nbTanks: nbTanks, id: 'tankMaker', debug: debug});
-            tanksMaker.addEventListener('message', function (e) {
-                var result = e.data;
-                var channel = result.channel;
-                if (channel === 'info') {
-                    var message = "Contacting Werner Von Kermal for tanks stack with "+result.nb+" parts.";
-                    $('#message').html(message);
-                }
-                if (channel === 'result') {
-                    Parts.fuelTanksStacks = result.stacks;
-                    //console.log(result.stacks.length);
-                    tanksMaker.terminate();
-                    tanksMaker = undefined;
-                    makeRockets();
-                }
-            });
-            
-            tanksMaker.postMessage({channel: "run"});
-            
+            if (nbTanks == GeneratedStackSize) {
+                console.log('FuelTank stacks with '+nbTanks+' parts Allready generated');
+                makeRockets();
+            } else {
+                console.log('Generate FuelTank stacks with ' + nbTanks + ' parts');
+                var tanksMaker = new Worker("workers/makeFuelTanksStack.js");
+                tanksMaker.postMessage({channel: 'create', parts: Parts.fuelTanks.concat(Parts.adapters), nbTanks: nbTanks, id: 'tankMaker', debug: debug});
+                tanksMaker.addEventListener('message', function (e) {
+                    var result = e.data;
+                    var channel = result.channel;
+                    if (channel === 'info') {
+                        var message = "Contacting Werner Von Kermal for tanks stack with " + result.nb + " parts.";
+                        $('#message').html(message);
+                    }
+                    if (channel === 'result') {
+                        Parts.fuelTanksStacks = result.stacks;
+                        GeneratedStackSize = nbTanks;
+                        //delete Parts.fuelTanks;
+                        //console.log(result.stacks.length);
+                        tanksMaker.terminate();
+                        tanksMaker = undefined;
+                        makeRockets();
+                    }
+                });
+                tanksMaker.postMessage({channel: "run"});
+            }
         }
-        
+
         // Launch making rockets
         function makeRockets() {
+            console.log('Search Rockets');
             searchRockets(1);
 
             $('#message').html("Recruiting Kerbals Ingineer");
@@ -211,7 +214,7 @@
                 scrollTop: $("#results").offset().top
             }, 1000);
         }
-        
+
         // Search all rockets
         function searchRockets(nbStages) {
             master = new Worker("workers/getRocket.js");
@@ -331,10 +334,10 @@
 
             return output;
         }
-        
+
         function updateCounter() {
             config_count++;
-            var message = valid_count +" valid configrations among "+config_count+" tested.";
+            var message = valid_count + " valid configrations among " + config_count + " tested.";
             $('#message').html(message);
         }
 
