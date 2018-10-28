@@ -1,12 +1,13 @@
 // Jquery
+var computationData = {};
 (function ($) {
     $(document).ready(function () {
         var config_count = 0;
         var valid_count = 0;
         var result_id = 0;
-        var computationData = {};
+        var GeneratedStackCollection = 'all';
         var GeneratedStackSize = 0;
-
+        
         var master;
         if (DEBUG === undefined) {
             DEBUG = {};
@@ -144,6 +145,7 @@
             simu.nbWorker = nbWorkers;
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
+            simu.partCollection = elems.parts_collection.value;
             simu.debug = {};
             simu.debug.status = debug_status;
             simu.debug.startTime = startTime.getTime();
@@ -167,30 +169,31 @@
 
             // Create FuelTanksStack
             // Which launch calculation when finished
-            makeFuelTanksStack(simu.maxTanks, simu.debug);
+            makeFuelTanksStack(simu.maxTanks, simu.partCollection, simu.debug);
             // Prevent default
             return false;
         });
 
         // Make fuelTanks Stacks
-        function makeFuelTanksStack(nbTanks, debug) {
-            if (nbTanks == GeneratedStackSize) {
-                console.log('FuelTank stacks with '+nbTanks+' parts Allready generated');
+        function makeFuelTanksStack(nbTanks, collection, debug) {
+            if (nbTanks == GeneratedStackSize && GeneratedStackCollection == collection) {
+                console.log('FuelTank stacks with '+nbTanks+' parts Allready generated (' +collection+ ')');
                 makeRockets();
             } else {
-                console.log('Generate FuelTank stacks with ' + nbTanks + ' parts');
+                console.log('Generate FuelTank stacks with ' + nbTanks + ' parts (' +collection+ ')');
                 var tanksMaker = new Worker("workers/makeFuelTanksStack.js");
-                tanksMaker.postMessage({channel: 'create', parts: Parts.fuelTanks.concat(Parts.adapters), nbTanks: nbTanks, id: 'tankMaker', debug: debug});
+                tanksMaker.postMessage({channel: 'create', parts: Parts.fuelTanks.concat(Parts.adapters), nbTanks: nbTanks, collection: collection, id: 'tankMaker', debug: debug});
                 tanksMaker.addEventListener('message', function (e) {
                     var result = e.data;
                     var channel = result.channel;
                     if (channel === 'info') {
-                        var message = "Contacting Werner Von Kermal for tanks stack with " + result.nb + " parts.";
+                        var message = "Contacting Werner Von Kermal for tanks stack with " + result.nb + " parts (" +collection+ ').';
                         $('#message').html(message);
                     }
                     if (channel === 'result') {
                         Parts.fuelTanksStacks = result.stacks;
                         GeneratedStackSize = nbTanks;
+                        GeneratedStackCollection = collection;
                         //delete Parts.fuelTanks;
                         //console.log(result.stacks.length);
                         tanksMaker.terminate();

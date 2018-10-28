@@ -345,8 +345,6 @@ function MakeRocketW(nb) {
                     var OUTPUT = output;
                 }
                 
-                
-                
                 // Note : OUTPUT.size are equal to false when engine are not "bottom stackable"
                 
                 var hash = JSON.stringify(OUTPUT).hashCode() ;

@@ -5,6 +5,7 @@ var worker_id;
 var Global_data = {};
 var Parts = {};
 var Global_status = 'run';
+var collection = 'all';
 var fragment_id = undefined;
 if(DEBUG === undefined) {DEBUG = {};}
 
@@ -19,6 +20,7 @@ self.addEventListener('message', function (e) {
         DEBUG.setStart(inputs.debug.startTime);
         worker_id = inputs.id;
         Parts = inputs.parts;
+        collection = inputs.collection;
         MaxTanks = inputs.nbTanks;
         DEBUG.send(worker_id + ' # created');
     }
@@ -47,6 +49,10 @@ function makeAssembly(nbTanks = 1, localMaxTanks = 1, topSize = null, stack = {}
 
         var current = Parts[i];
         
+        if(collection != 'all' && current.provider != [collection]) {
+            continue;
+        }
+        
         // Manage First Part of Stack
         if(topSize == null) {
             stack = {};
@@ -57,6 +63,8 @@ function makeAssembly(nbTanks = 1, localMaxTanks = 1, topSize = null, stack = {}
             stack.info.mass.full = 0;
             stack.info.stackable = {};
             stack.info.stackable.top = current.stackable.top;
+            stack.info.provider = {};
+            stack.info.provider[current.provider] = current.provider;
         }
         else {
             // if other part of stack, check assembly
@@ -81,10 +89,11 @@ function makeAssembly(nbTanks = 1, localMaxTanks = 1, topSize = null, stack = {}
         
         // Manage TopSize
         var localStack = clone(stack);
-        //localStack.parts.push({id: current.id, name: current.name});
-        localStack.parts.push(current);
+        localStack.parts.push({id: current.id, name: current.name, provider : current.provider});
+        //localStack.parts.push(current);
         localStack.info.mass.full += current.mass.full;
         localStack.info.mass.empty += current.mass.empty;    
+        localStack.info.provider[current.provider] = current.provider;
         
         if(nbTanks == localMaxTanks) {
             localStack.info.stackable.bottom = current.stackable.bottom;

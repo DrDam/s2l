@@ -78,7 +78,16 @@ function giveMeASingleStage(availableEngines) {
 
     for (var i in availableEngines) {
         
-        if(Global_data.rocket.bottom !== true && availableEngines[i].stackable.bottom == false) {
+        var engine = availableEngines[i];
+        
+        // Manage collection
+        if(Global_data.simu.partCollection != 'all') {
+            if(testCollection(engine) === true) {
+                continue;
+            }
+        }
+
+        if(Global_data.rocket.bottom !== true && engine.stackable.bottom == false) {
             self.postMessage({channel: 'badDesign'});
             continue;
         }
@@ -86,7 +95,7 @@ function giveMeASingleStage(availableEngines) {
         if (Global_status == 'stop') {
             return null;
         }
-        var engine = availableEngines[i];
+
         // Get Engine ISP / Thrust
         var caracts = engine.caract;
         // @TODO : Add Atm curve
@@ -262,4 +271,14 @@ function testTwr(Thrust, Mass, target, Go) {
     else {
         return(Twr > target.min &&  Twr < target.max);
     }
+}
+
+// test Collection
+function testCollection(part) {
+    for(var p in part.provider) {
+    if( p != Global_data.simu.partCollection) {
+        return true ;
+    }
+}
+return false;
 }
