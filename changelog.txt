@@ -3,6 +3,7 @@
 #############
 v0.0.16
 - Refactor tank stack generation
+- miscellaneous corrections
 
 v0.0.15
 - Correct on parts
