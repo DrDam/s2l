@@ -337,13 +337,15 @@ function MakeRocketW(nb) {
                 var result = e.data;
                 var output = result.output;
                 
-                if(result.data.Upper) {
+                if(result.data.Upper.burn) {
                     var OUTPUT = addStages(result.data.Upper, output);
                     result.data.Upper = {}
                 }
                 else {
                     var OUTPUT = output;
                 }
+                
+                
                 
                 // Note : OUTPUT.size are equal to false when engine are not "bottom stackable"
                 
