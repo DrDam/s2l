@@ -5,8 +5,8 @@ var worker_id;
 var Global_data = {};
 var Parts = {};
 var Global_status = 'run';
-var fragment_id = undefined;
-if(DEBUG === undefined) {DEBUG = {};}
+var fragment_id ;
+
 function autostop() {
     var stopped = new Date();
     Global_data = null;

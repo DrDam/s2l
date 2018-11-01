@@ -36,7 +36,7 @@ function getFuelTankSolution(stageData) {
         // Control overFlow
         var OverFlow = getStackOverflow(stack.info, stageData);
         if (OverFlow == null || OverFlow < 0) {
-            continue
+            continue;
         }
 
         if (OverFlow < bestOverflow) {
@@ -46,7 +46,7 @@ function getFuelTankSolution(stageData) {
                 mFuel: stack.info.mass.full - stack.info.mass.empty,
                 mDry: stack.info.mass.empty,
                 solution: stack.parts
-            }
+            };
         }
     }
     

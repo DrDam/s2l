@@ -9,9 +9,6 @@ var computationData = {};
         var GeneratedStackSize = 0;
         
         var master;
-        if (DEBUG === undefined) {
-            DEBUG = {};
-        }
 
         // toggle information block
         $("#readme_button").click(function () {
@@ -55,7 +52,7 @@ var computationData = {};
 
         // Table initialisation
         var resultTable = null;
-        var result_id = 0;
+        result_id = 0;
 
         // See Details of a stage
         $('#results table').on('click', 'tbody td', function () {
@@ -186,10 +183,6 @@ var computationData = {};
                 tanksMaker.addEventListener('message', function (e) {
                     var result = e.data;
                     var channel = result.channel;
-                    if (channel === 'info') {
-                        var message = "Contacting Werner Von Kermal for tanks stack with " + result.nb + " parts (" +collection+ ').';
-                        $('#message').html(message);
-                    }
                     if (channel === 'result') {
                         Parts.fuelTanksStacks = result.stacks;
                         GeneratedStackSize = nbTanks;
@@ -201,6 +194,8 @@ var computationData = {};
                         makeRockets();
                     }
                 });
+                var message = "Contacting Werner Von Kerman for tanks stack with " + nbTanks + " parts (" +collection+ ').';
+                $('#message').html(message);
                 tanksMaker.postMessage({channel: "run"});
             }
         }
@@ -252,7 +247,7 @@ var computationData = {};
                     DEBUG.send(id_to_kill + ' # END');
                     master = undefined;
                     if (computationData.rocket.stages >= nbStages + 1) {
-                        searchRockets(nbStages + 1, computationData)
+                        searchRockets(nbStages + 1, computationData);
                     } else {
                         console.log('END Calculations at ' + new Date());
                         $('#stop').prop('disabled', true);

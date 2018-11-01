@@ -4,8 +4,6 @@ if (typeof Worker === 'undefined') {
     importScripts("../lib/subworkers.js");
 }
 
-if(DEBUG === undefined) {DEBUG = {};}
-
 // Worker ID
 var worker_id;
 
@@ -336,20 +334,21 @@ function MakeRocketW(nb) {
                 DEBUG.send(sub_worker_id + ' # send Result # ' + e.data.hash);
                 var result = e.data;
                 var output = result.output;
+                var outToParent = {};
                 
                 if(result.data.Upper.burn) {
-                    var OUTPUT = addStages(result.data.Upper, output);
-                    result.data.Upper = {}
+                    outToParent = addStages(result.data.Upper, output);
+                    result.data.Upper = {};
                 }
                 else {
-                    var OUTPUT = output;
+                    outToParent = output;
                 }
                 
-                // Note : OUTPUT.size are equal to false when engine are not "bottom stackable"
+                // Note : outToParent.size are equal to false when engine are not "bottom stackable"
                 
-                var hash = JSON.stringify(OUTPUT).hashCode() ;
+                var hash = JSON.stringify(outToParent).hashCode() ;
                 DEBUG.send(worker_id + ' # send to output # ' + hash);
-                self.postMessage({channel: 'result', output: OUTPUT, id: worker_id, data: result.data, hash:hash});
+                self.postMessage({channel: 'result', output: outToParent, id: worker_id, data: result.data, hash:hash});
             }
         });
         i++;
@@ -397,13 +396,13 @@ function VerifyAutostop() {
 // Find how many children are running
 function findAllRunningWorker() {
     var counter = 0;
-    for (sub_worker_id in UpperWStackStatus) {
-        if (UpperWStackStatus[sub_worker_id] === 'run') {
+    for (var upper_sub_worker_id in UpperWStackStatus) {
+        if (UpperWStackStatus[upper_sub_worker_id] === 'run') {
             counter++;
         }
     }
-    for (sub_worker_id in UpperWStackStatus) {
-        if (RocketWStackStatus[sub_worker_id] === 'run') {
+    for (var rocket_sub_worker_id in RocketWStackStatus) {
+        if (RocketWStackStatus[rocket_sub_worker_id] === 'run') {
             counter++;
         }
     }

@@ -2,12 +2,10 @@ importScripts('../lib/lib.js');
 var startTime = new Date();
 
 var worker_id;
-var Global_data = {};
 var Parts = {};
 var Global_status = 'run';
 var collection = 'all';
-var fragment_id = undefined;
-if(DEBUG === undefined) {DEBUG = {};}
+
 
 var Stacks = [];
 var nbTanks = 0;
@@ -36,23 +34,17 @@ self.addEventListener('message', function (e) {
 /**********************/
 /** Generate Stacks **/
 /********************/
-function generateStacks() {
-    for (var nbTanks = 1; nbTanks <= MaxTanks; nbTanks++) {
-        DEBUG.send(worker_id + ' # generate ' + nbTanks + ' parts stacks');
-        self.postMessage({channel:'info', nb:nbTanks});
-        makeAssembly(1, nbTanks);
-    }
-}
+function generateStacks(topSize = null, stack = {}) {
+    for(var i in Parts) {
 
-function makeAssembly(nbTanks = 1, localMaxTanks = 1, topSize = null, stack = {}) {
-    for (var i in Parts) {
-
+        // select part
         var current = Parts[i];
-        
-        if(collection != 'all' && current.provider != [collection]) {
+
+        // Filter collection
+        if(collection != 'all' && current.provider != [collection]){
             continue;
         }
-        
+
         // Manage First Part of Stack
         if(topSize == null) {
             stack = {};
@@ -68,9 +60,11 @@ function makeAssembly(nbTanks = 1, localMaxTanks = 1, topSize = null, stack = {}
         }
         else {
             // if other part of stack, check assembly
-            if (topSize !== current.stackable.top) { continue; }
+            if (topSize !== current.stackable.top) { 
+                continue; 
+            }
         }
-        
+
         // Manage fuelType
         if(current.ressources != undefined) {
             // First Stack part with fuel
@@ -86,22 +80,23 @@ function makeAssembly(nbTanks = 1, localMaxTanks = 1, topSize = null, stack = {}
                 }
             }
         }
-        
-        // Manage TopSize
+
+        // add Part to stack
         var localStack = clone(stack);
         localStack.parts.push({id: current.id, name: current.name, provider : current.provider});
         //localStack.parts.push(current);
+
+        // add mass & provider to stack
         localStack.info.mass.full += current.mass.full;
         localStack.info.mass.empty += current.mass.empty;    
         localStack.info.provider[current.provider] = current.provider;
-        
-        if(nbTanks == localMaxTanks) {
-            localStack.info.stackable.bottom = current.stackable.bottom;
-            Stacks.push(localStack);
-            continue;
-        }
-        else {
-            makeAssembly(nbTanks+1, localMaxTanks, current.stackable.bottom, localStack);
+
+        // push stack
+        localStack.info.stackable.bottom = current.stackable.bottom;
+        Stacks.push(localStack);
+
+        if(localStack.parts.length < MaxTanks) {
+            generateStacks(current.stackable.bottom, localStack);
         }
     }
 }
