@@ -174,12 +174,12 @@ var ProcessedParts = {};
                         collection[box[0]][box[1]] = box[1];
                     }
                 });
-                for(var part_group in Parts) {
-                    ProcessedParts[part_group] = [];
-                    for(var part_id in Parts[part_group]) {
-                        var part = Parts[part_group][part_id];
-                        if(collection[part_group] && collection[part_group][part.id]){
-                            ProcessedParts[part_group].push(clone(Parts[part_group][part_id]));
+                for(var part_category in Parts) {
+                    ProcessedParts[part_category] = [];
+                    for(var key in Parts[part_category]) {
+                        var part = Parts[part_category][key];
+                        if(collection[part_category] && collection[part_category][part.id]){
+                            ProcessedParts[partpart_category_group].push(clone(Parts[part_category][key]));
                         }
                     }
                 }

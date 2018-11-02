@@ -31,7 +31,14 @@ self.addEventListener('message', function (e) {
 /**********************/
 /** Generate Stacks **/
 /********************/
-function generateStacks(topSize = null, stack = {}) {
+function generateStacks(topSize, stack) {
+    if(topSize == undefined) {
+        topSize = null;
+    }
+    if(stack == undefined) {
+        stack = {};
+    }
+
     for(var i in Parts) {
 
         // select part
