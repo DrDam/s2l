@@ -179,7 +179,7 @@ var ProcessedParts = {};
                     for (var key in Parts[part_category]) {
                         var part = Parts[part_category][key];
                         if (collection[part_category] && collection[part_category][part.id]) {
-                            ProcessedParts[partpart_category_group].push(clone(Parts[part_category][key]));
+                            ProcessedParts[part_category].push(clone(Parts[part_category][key]));
                         }
                     }
                 }
@@ -224,7 +224,7 @@ var ProcessedParts = {};
             };
 
             PartToCalculation.adapters = ProcessedParts.adapters;
-
+            PartToCalculation.decouplers = ProcessedParts.decouplers;
 
             /**********************************/
             /* End Init calculation variables */
