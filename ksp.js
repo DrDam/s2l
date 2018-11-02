@@ -309,7 +309,7 @@ var ProcessedParts = {};
             for (var engine_id in ProcessedParts.engines) {
 
                 var engine = ProcessedParts.engines[engine_id];
-
+                engine.nb = 1;
                 // Add Engine
                 PartToCalculation.engines.push(clone(engine));
 
@@ -326,9 +326,10 @@ var ProcessedParts = {};
                     // Create new Engine
                     var nb_engines = coupler.stackable.bottom_number;
                     var new_engine = clone(engine);
-                    new_engine.id = coupler_id + '_' + nb_engines + '_' + engine_id;
+                    new_engine.id = coupler.id + '_' + nb_engines + '_' + engine.id;
                     new_engine.mass.full = coupler.mass.full + nb_engines * engine.mass.full;
                     new_engine.mass.empty = coupler.mass.empty + nb_engines * engine.mass.empty;
+                    new_engine.cost = coupler.cost + nb_engines * engine.cost;
                     new_engine.name = coupler.name + ' + ' + nb_engines + 'x' + engine.name;
                     new_engine.caract.MaxThrust = nb_engines * engine.caract.MaxThrust;
                     for (var curve_id in new_engine.caract.curve) {
@@ -340,7 +341,7 @@ var ProcessedParts = {};
                         new_engine.caract.conso.proportions[fuel_type] = nb_engines * engine.caract.conso.proportions[fuel_type];
                     }
                     new_engine.provider[coupler.provider] = coupler.provider;
-
+                    new_engine.nb = nb_engines + 1;
                     // push new Engine
                     PartToCalculation.engines.push(clone(new_engine));
                 }
@@ -364,7 +365,7 @@ var ProcessedParts = {};
             // Launch workers !
             searchRockets(1);
 
-            $('#message').html("Recruiting Kerbals Ingineer");
+            $('#message').html("Recruiting Kerbals Engineer");
         }
 
         // Search all rockets
@@ -425,13 +426,14 @@ var ProcessedParts = {};
             var nbStages = data.nbStages;
             var dv = round(data.stageDv, 2);
             var Cu_part = round(round(data.cu.mass / mass, 4) * 100, 2);
-
+            var count = data.nb;
+            var cost = data.cost;
             var StagesHTML = '<div class="stagesDetails">';
             StagesHTML += data.cuHTML;
             StagesHTML += printStages(data.stages, mass, dv, result_id);
             StagesHTML += "</div>";
 
-            resultTable.row.add([result_id, nbStages, mass, Cu_part, dv, StagesHTML]).draw();
+            resultTable.row.add([result_id, nbStages, mass, Cu_part, dv, count, cost, StagesHTML]).draw();
             updateCounter();
         }
 

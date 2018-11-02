@@ -366,6 +366,8 @@ function addStages(stack, stage) {
     newStack.size = stage.size;
     newStack.stageDv = stack.stageDv + stage.stageDv;
     newStack.totalMass = stack.totalMass + stage.totalMass;
+    newStack.cost =  stack.cost + stage.cost;
+    newStack.nb = stack.nb + stage.nb;
     newStack.stages = [];
 
     for (var i in stack.stages) {

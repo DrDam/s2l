@@ -105,11 +105,12 @@ function giveMeASingleStage(availableEngines) {
             decoupler.mass = {};
             decoupler.mass.full = 0;
             decoupler.name = '';
+            decoupler.cost = 0;
         }
         cu.mass = cu.mass + decoupler.mass.full;
 
         // Add commandModule if needed
-        var command = { mass: 0, stack: [] };
+        var command = { mass: 0, stack: [], nb:0, cost:0 };
         cu.mass = cu.mass + command.mass;
 
         // Prepare Masses values
@@ -193,6 +194,8 @@ function giveMeASingleStage(availableEngines) {
         } else {
             TankSolution.mFuel = 0;
             TankSolution.mDry = 0;
+            TankSolution.cost = 0;
+            TankSolution.nb = 0;
             TankSolution.solution = [];
         }
 
@@ -204,13 +207,13 @@ function giveMeASingleStage(availableEngines) {
         var TwrDry = Thrust / MstageDry / SOI.Go;
         var burnDuration = stageFuelMass * ISP * SOI.Go / Thrust;
         var Dv = ISP * SOI.Go * Math.log(MstageFull / MstageDry);
-
+        var cost = engine.cost + decoupler.cost + command.cost + TankSolution.cost;
+        var nb = engine.nb + 1 + command.nb + TankSolution.solution.length;
         var stage = {
             decoupler: decoupler.name,
             commandModule: command.stack,
             tanks: TankSolution.solution,
             engine: engine.name,
-
             mcarbu: stageFuelMass,
             twr: {
                 min: TwrFull,
@@ -228,6 +231,8 @@ function giveMeASingleStage(availableEngines) {
             burn: stage.burn,
             stageDv: Dv,
             nbStages: 1,
+            cost: cost,
+            nb:nb,
             size: engine.stackable.bottom
         };
         self.postMessage({ channel: 'result', output: output, id: worker_id, data: Global_data });

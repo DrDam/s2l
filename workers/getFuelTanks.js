@@ -38,6 +38,7 @@ function getFuelTankSolution(stageData) {
             bestSolution = {
                 mFuel: stack.info.mass.full - stack.info.mass.empty,
                 mDry: stack.info.mass.empty,
+                cost: stack.info.cost,
                 solution: stack.parts
             };
         }

@@ -4,6 +4,7 @@
 .group_wrapper {
   display: inline-block;
   width: 49%;
+  margin: auto;
   vertical-align: top;
 }
 
@@ -32,9 +33,13 @@
 
 
 /* Table */
+#result_wrapper{
+  width: 100%
+}
 
 #results {
-  width: 100%;
+  width: 95%;
+  margin: auto;
   margin-top: 10px;
   display:none
 }

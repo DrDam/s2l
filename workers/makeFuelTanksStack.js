@@ -52,10 +52,12 @@ function generateStacks(topSize, stack) {
             stack.info.mass = {};
             stack.info.mass.empty = 0;
             stack.info.mass.full = 0;
+            stack.info.cost = 0;
             stack.info.stackable = {};
             stack.info.stackable.top = current.stackable.top;
             stack.info.provider = {};
             stack.info.provider[current.provider] = current.provider;
+            stack.info.nb = 0;
         }
         else {
             // if other part of stack, check assembly
@@ -89,9 +91,11 @@ function generateStacks(topSize, stack) {
         localStack.info.mass.full += current.mass.full;
         localStack.info.mass.empty += current.mass.empty;
         localStack.info.provider[current.provider] = current.provider;
+        localStack.info.cost += current.cost;
 
         // push stack
         localStack.info.stackable.bottom = current.stackable.bottom;
+        localStack.info.nb = localStack.parts.length;
         Stacks.push(localStack);
 
         if (localStack.parts.length < MaxTanks) {
