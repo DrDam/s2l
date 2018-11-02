@@ -4,8 +4,6 @@ var startTime = new Date();
 var worker_id;
 var Parts = {};
 var Global_status = 'run';
-var collection = 'all';
-
 
 var Stacks = [];
 var nbTanks = 0;
@@ -18,7 +16,6 @@ self.addEventListener('message', function (e) {
         DEBUG.setStart(inputs.debug.startTime);
         worker_id = inputs.id;
         Parts = inputs.parts;
-        collection = inputs.collection;
         MaxTanks = inputs.nbTanks;
         DEBUG.send(worker_id + ' # created');
     }
@@ -39,11 +36,6 @@ function generateStacks(topSize = null, stack = {}) {
 
         // select part
         var current = Parts[i];
-
-        // Filter collection
-        if(collection != 'all' && current.provider != [collection]){
-            continue;
-        }
 
         // Manage First Part of Stack
         if(topSize == null) {

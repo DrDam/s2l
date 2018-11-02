@@ -16,13 +16,6 @@ function getFuelTankSolution(stageData) {
     for (var i in Parts.fuelTanksStacks) {
         var stack = Parts.fuelTanksStacks[i];
 
-        // Manage collection
-        if(Global_data.simu.partCollection != 'all') {
-            if(testCollection(stack) === true) {
-                continue;
-            }
-        }
-
         // Control size (75% out)
         if (stack.info.stackable.top != cu_size || stack.info.stackable.bottom != engine_size) {
             continue;

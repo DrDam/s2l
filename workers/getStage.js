@@ -79,13 +79,6 @@ function giveMeASingleStage(availableEngines) {
     for (var i in availableEngines) {
         
         var engine = availableEngines[i];
-        
-        // Manage collection
-        if(Global_data.simu.partCollection != 'all') {
-            if(testCollection(engine) === true) {
-                continue;
-            }
-        }
 
         if(Global_data.rocket.bottom !== true && engine.stackable.bottom == false) {
             self.postMessage({channel: 'badDesign'});
@@ -271,14 +264,4 @@ function testTwr(Thrust, Mass, target, Go) {
     else {
         return(Twr > target.min &&  Twr < target.max);
     }
-}
-
-// test Collection
-function testCollection(part) {
-    for(var p in part.provider) {
-    if( p != Global_data.simu.partCollection) {
-        return true ;
-    }
-}
-return false;
 }

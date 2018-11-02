@@ -69,3 +69,7 @@
 .composition .fuelstack {
     text-align: left;
 }
+
+#part_collection_advanced {
+  display: none;
+}

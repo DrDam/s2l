@@ -1,74 +1,49 @@
-// Jquery
+
 var computationData = {};
+var PartToCalculation = {};
+var collection = {};
+var ProcessedParts = {};
 (function ($) {
+
     $(document).ready(function () {
+
+        // Initialize variables
         var config_count = 0;
         var valid_count = 0;
         var result_id = 0;
         var GeneratedStackCollection = 'all';
         var GeneratedStackSize = 0;
-        
+
+        // Init worker variable
         var master;
+
+        /**************************/
+        /* Manage actions on page */
+        /**************************/
 
         // toggle information block
         $("#readme_button").click(function () {
-            $("#readme").toggle("slow", function () {});
+            $("#readme").toggle("slow", function () { });
         });
 
         // toggle advanced configuration
         $("#advanced_button").click(function (event) {
             event.preventDefault();
-            $("#advanced").toggle("slow", function () {});
+            $("#advanced").toggle("slow", function () { });
             return false;
         });
 
-        // Desactivate action button if Engine & FuelTanks are no loaded
-        $('.action_button').each(function () {
-            $(this).prop('disabled', true);
+        // Toggle part Mode
+        $('input[type=radio][name=part_mode]').change(function () {
+            $('.part-collection').hide();
+            $('#' + $(this).val()).show();
         });
-
-        var Sizes = [
-            {id: '0', label: 'Tiny - 0.625m'},
-            {id: '1', label: 'Small - 1.25m'},
-            {id: '1p5', label: 'Medium - 1.875m'},
-            {id: '2', label: 'Large - 2.5m'},
-            {id: '3', label: 'Extra Large - 3.75m'},
-            {id: '4', label: 'Huge - 5m'},
-            {id: 'mk1', label: 'Mk1 - 5m'},
-            {id: 'mk2', label: 'Mk2'},
-            {id: 'mk3', label: 'Mk3'}
-        ];
-        // Populate CU size select
-        $.each(Sizes, function (i, item) {
-            var data = {
-                value: item.id,
-                text: item.label
-            };
-            if (item.id === '1') {
-                data.selected = 'selected';
-            }
-            $('#sizeCU').append($('<option>', data));
-        });
-
-        // Table initialisation
-        var resultTable = null;
-        result_id = 0;
 
         // See Details of a stage
         $('#results table').on('click', 'tbody td', function () {
             $(this).parent().find("td:last-child").toggleClass("show");
         });
 
-        // Prepare stage templating
-        var stageTPL = null;
-        $.get('tpl/stages.html.tpl', function (data) {
-            stageTPL = data;
-        }, 'text');
-        var cuTPL = null;
-        $.get('tpl/cu.html.tpl', function (data) {
-            cuTPL = data;
-        }, 'text');
-        var cuHTML = null;
         // Binding Stop button
         $('#stop').click(function () {
             // Kill Calculation
@@ -78,25 +53,75 @@ var computationData = {};
             $('#start').prop('disabled', false);
         });
 
-        /**
-         * 
-         * 
-         * Submit FORM => Start
-         * 
-         * 
-         */
+
+    // Set Sizes
+    Sizes = [
+        { id: '0', label: 'Tiny - 0.625m' },
+        { id: '1', label: 'Small - 1.25m' },
+        { id: '1p5', label: 'Medium - 1.875m' },
+        { id: '2', label: 'Large - 2.5m' },
+        { id: '3', label: 'Extra Large - 3.75m' },
+        { id: '4', label: 'Huge - 5m' },
+        { id: 'mk1', label: 'Mk1 - 5m' },
+        { id: 'mk2', label: 'Mk2' },
+        { id: 'mk3', label: 'Mk3' }
+    ];
+    // Populate CU size select
+    $.each(Sizes, function (i, item) {
+        var data = {
+            value: item.id,
+            text: item.label
+        };
+        if (item.id === '1') {
+            data.selected = 'selected';
+        }
+        $('#sizeCU').append($('<option>', data));
+    });
+
+
+        /*******************************/
+        /* End Manage actions on page */
+        /*****************************/
+
+        // Table initialisation
+        var resultTable = null;
+        result_id = 0;
+
+        // Prepare stage templating
+        var stageTPL = null;
+        $.get('tpl/stages.mst', function (data) {
+            stageTPL = data;
+        }, 'text');
+        var cuTPL = null;
+        $.get('tpl/cu.mst', function (data) {
+            cuTPL = data;
+        }, 'text');
+        var cuHTML = null;
+
+        /******************************/
+        /******************************/
+        /** 
+        /** Start Processing on submit
+        /** 
+        /******************************/
+        /******************************/
         $('#param').submit(function (event) {
-            config_count = 0;
-            valid_count = 0;
-            result_id = 0;
             // Prevent default
             event.preventDefault();
 
+            // Counters
+            config_count = 0;
+            valid_count = 0;
+            result_id = 0;
+
             // Set Start Time
             var startTime = new Date();
+
+            // Manage Start / Stop buttons
             $('#start').prop('disabled', true);
             $('#stop').prop('disabled', false);
 
+            // If table not prepared, init it
             if (resultTable === null) {
                 $('#results').show();
                 resultTable = $('#results table').DataTable({
@@ -106,9 +131,9 @@ var computationData = {};
                     },
                     order: [[3, "desc"]],
                     columnDefs: [
-                        {width: 50, targets: 0},
-                        {width: 100, targets: [1, 2]},
-                        {width: 200, targets: [3, 4]}
+                        { width: 50, targets: 0 },
+                        { width: 100, targets: [1, 2] },
+                        { width: 200, targets: [3, 4] }
 
                     ],
                     fixedColumns: true
@@ -118,9 +143,54 @@ var computationData = {};
 
             // Get form values
             var elems = event.currentTarget.elements;
+            var collection_name = '';
+            // Filtre part
+            var part_mode = elems.part_mode.value;
+            ProcessedParts = {};
+            if(part_mode == 'part_collection_simple') {
+                collection_name = elems.parts_collection.value;
+                if(collection_name != 'all') {
+                    for(var part_group in Parts) {
+                        ProcessedParts[part_group] = [];
+                        for(var part_id in Parts[part_group]) {
+                            if(getKeys(Parts[part_group][part_id].provider)[0] == collection_name){
+                                ProcessedParts[part_group].push(clone(Parts[part_group][part_id]));
+                            }
+                        }
+                    }
+                }
+                else {
+                    ProcessedParts = clone(Parts);
+                }
+            }
+            else {
+                collection_name = 'custom';
+                $.each(elems.partList, function(i, item){
+                    if($(item).prop('checked')) {
+                        var box = $(this).val().split('--');
+                        if(!collection[box[0]]) {
+                            collection[box[0]] = {};
+                        }
+                        collection[box[0]][box[1]] = box[1];
+                    }
+                });
+                for(var part_group in Parts) {
+                    ProcessedParts[part_group] = [];
+                    for(var part_id in Parts[part_group]) {
+                        var part = Parts[part_group][part_id];
+                        if(collection[part_group] && collection[part_group][part.id]){
+                            ProcessedParts[part_group].push(clone(Parts[part_group][part_id]));
+                        }
+                    }
+                }
+            }
+
+            /******************************/
+            /* Init calculation variables */
+            /******************************/
 
             var SOI = {};
-            SOI.kerbin = {Go: 9.81};
+            SOI.kerbin = { Go: 9.81 };
 
             var CU = {};
             CU.mass = parseFloat(elems.Mu.value);
@@ -142,7 +212,6 @@ var computationData = {};
             simu.nbWorker = nbWorkers;
             simu.step = parseInt(elems.Step.value);
             simu.maxTanks = parseInt(elems.nbTanks.value);
-            simu.partCollection = elems.parts_collection.value;
             simu.debug = {};
             simu.debug.status = debug_status;
             simu.debug.startTime = startTime.getTime();
@@ -154,9 +223,18 @@ var computationData = {};
                 simu: simu,
             };
 
-            cuHTML = makeCuHtml(CU, Sizes);
-            console.log('Start Calculations at ' + startTime);
+            PartToCalculation.adapters = ProcessedParts.adapters;
+            
 
+            /**********************************/
+            /* End Init calculation variables */
+            /**********************************/
+
+            // Init HTML of CU
+            cuHTML = makeCuHtml(CU, Sizes);
+
+            // Log Starting
+            console.log('Start Calculations at ' + startTime);
             /*
              console.log('###################');
              console.log('input data');
@@ -164,53 +242,129 @@ var computationData = {};
              console.log('###################');
              */
 
+            /**********************/
             // Create FuelTanksStack
             // Which launch calculation when finished
-            makeFuelTanksStack(simu.maxTanks, simu.partCollection, simu.debug);
+            makePartStacks(simu.maxTanks, collection_name, simu.debug);
+
             // Prevent default
             return false;
         });
 
-        // Make fuelTanks Stacks
-        function makeFuelTanksStack(nbTanks, collection, debug) {
+        /**********************/
+        /* Running Operations */
+        /**********************/
+        
+        // Make part Stacks (Fuel Tank / Engine couplers)
+        function makePartStacks(nbTanks, collection_name, debug) {
+            // Init Stack Flag
+            stacksGenerated = [];
+
+            // Generate Engine Stacks (no need workers)
+            generateEnginesStacks();
+
+            // Show table
+            $('html, body').animate({
+                scrollTop: $("#results").offset().top
+            }, 1000);
+
+            // If collection not changed
             if (nbTanks == GeneratedStackSize && GeneratedStackCollection == collection) {
-                console.log('FuelTank stacks with '+nbTanks+' parts Allready generated (' +collection+ ')');
-                makeRockets();
+                console.log('FuelTank stacks with ' + nbTanks + ' parts Allready generated (' + collection_name + ')');
+                stackGenerated('fuelTanks');
             } else {
-                console.log('Generate FuelTank stacks with ' + nbTanks + ' parts (' +collection+ ')');
+                // Need to rebuild stacks
+                console.log('Generate FuelTank stacks with ' + nbTanks + ' parts (' + collection_name + ')');
                 var tanksMaker = new Worker("workers/makeFuelTanksStack.js");
-                tanksMaker.postMessage({channel: 'create', parts: Parts.fuelTanks.concat(Parts.adapters), nbTanks: nbTanks, collection: collection, id: 'tankMaker', debug: debug});
+                tanksMaker.postMessage({
+                    channel: 'create', 
+                    parts: ProcessedParts.fuelTanks.concat(ProcessedParts.adapters), 
+                    nbTanks: nbTanks, 
+                    id: 'tankMaker', 
+                    debug: debug
+                });
                 tanksMaker.addEventListener('message', function (e) {
                     var result = e.data;
                     var channel = result.channel;
                     if (channel === 'result') {
-                        Parts.fuelTanksStacks = result.stacks;
+                        PartToCalculation.fuelTanksStacks = result.stacks;
                         GeneratedStackSize = nbTanks;
                         GeneratedStackCollection = collection;
-                        //delete Parts.fuelTanks;
-                        //console.log(result.stacks.length);
+
                         tanksMaker.terminate();
                         tanksMaker = undefined;
-                        makeRockets();
+                        stackGenerated('fuelTanks');
                     }
                 });
-                var message = "Contacting Werner Von Kerman for tanks stack with " + nbTanks + " parts (" +collection+ ').';
+                var message = "Contacting Werner Von Kerman for tanks stack with " + nbTanks + " parts (" + collection_name + ').';
                 $('#message').html(message);
-                tanksMaker.postMessage({channel: "run"});
+                tanksMaker.postMessage({ channel: "run" });
+            }
+        }
+
+        // Generate Engine Stacks
+        PartToCalculation.engines = [];
+        function generateEnginesStacks() {
+
+            for (var engine_id in ProcessedParts.engines) {
+
+                var engine = ProcessedParts.engines[engine_id];
+
+                // Add Engine
+                PartToCalculation.engines.push(clone(engine));
+
+                // Try put engine on a coupler
+                for (var coupler_id in ProcessedParts.couplers) {
+                    var coupler = ProcessedParts.couplers[coupler_id];
+
+
+                    // only If Engine mount on coupler
+                    if (engine.stackable.top != coupler.stackable.bottom) {
+                        continue;
+                    }
+
+                    // Create new Engine
+                    var nb_engines = coupler.stackable.bottom_number;
+                    var new_engine = clone(engine);
+                    new_engine.id = coupler_id + '_' + nb_engines + '_' + engine_id;
+                    new_engine.mass.full = coupler.mass.full + nb_engines * engine.mass.full;
+                    new_engine.mass.empty = coupler.mass.empty + nb_engines * engine.mass.empty;
+                    new_engine.name = coupler.name + ' + ' + nb_engines + 'x' + engine.name;
+                    new_engine.caract.MaxThrust = nb_engines * engine.caract.MaxThrust;
+                    for (var curve_id in new_engine.caract.curve) {
+                        new_engine.caract.curve[curve_id].Thrust = nb_engines * engine.caract.curve[curve_id].Thrust;
+                    }
+                    new_engine.stackable.bottom = false;
+                    new_engine.cost = coupler.cost + nb_engines * engine.cost;
+                    for (var fuel_type in new_engine.caract.conso.proportions) {
+                        new_engine.caract.conso.proportions[fuel_type] = nb_engines * engine.caract.conso.proportions[fuel_type];
+                    }
+                    new_engine.provider[coupler.provider] = coupler.provider;
+
+                    // push new Engine
+                    PartToCalculation.engines.push(clone(new_engine));
+                }
+            }
+            stackGenerated('engines');
+        }
+
+        // Control if all stacks are generated
+        var stacksGenerated = [];
+        function stackGenerated(stack_name) {
+            stacksGenerated.push(stack_name);
+            if (stacksGenerated.length == 2) {
+                // if ok, starting rocket creation
+                makeRockets();
             }
         }
 
         // Launch making rockets
         function makeRockets() {
             console.log('Search Rockets');
+            // Launch workers !
             searchRockets(1);
 
             $('#message').html("Recruiting Kerbals Ingineer");
-
-            // Show table
-            $('html, body').animate({
-                scrollTop: $("#results").offset().top
-            }, 1000);
         }
 
         // Search all rockets
@@ -220,8 +374,13 @@ var computationData = {};
 
             var master_data = clone(computationData);
             master_data.rocket.stages = nbStages;
-            master.postMessage({channel: 'create', parts: Parts, id: master_id, debug: computationData.simu.debug});
-            master.postMessage({channel: "init", data: master_data});
+            master.postMessage({ 
+                channel: 'create', 
+                parts: PartToCalculation, 
+                id: master_id, 
+                debug: computationData.simu.debug 
+            });
+            master.postMessage({ channel: "init", data: master_data });
             master.addEventListener('message', function (e) {
                 var result = e.data;
                 var channel = result.channel;
@@ -237,7 +396,7 @@ var computationData = {};
                     var master_id = result.id;
                     // If Master end all is processing, kill it
                     DEBUG.send(master_id + ' # Send wait');
-                    master.postMessage({channel: 'stop'});
+                    master.postMessage({ channel: 'stop' });
                 }
                 if (channel === 'badDesign') {
                     updateCounter();
@@ -255,7 +414,7 @@ var computationData = {};
                     }
                 }
             });
-            master.postMessage({channel: "run"});
+            master.postMessage({ channel: "run" });
         }
 
 
@@ -295,17 +454,17 @@ var computationData = {};
                 stageData.decoupler = stage.decoupler;
                 stageData.engine = stage.engine;
 
-                stageData.tanks = [];
+                stageData.tanks = [];
                 var tanks = stage.tanks;
                 for (var j in tanks) {
                     var tank = tanks[j];
-                    stageData.tanks.push({tank_name: tank.name});
+                    stageData.tanks.push({ tank_name: tank.name });
                 }
-                stageData.command = [];
+                stageData.command = [];
                 var command = stage.commandModule;
                 for (var k in command) {
                     var part = command[k];
-                    stageData.command.push({part_name: part.name});
+                    stageData.command.push({ part_name: part.name });
                 }
                 var rendered = Mustache.render(stageTPL, stageData);
                 output += rendered;

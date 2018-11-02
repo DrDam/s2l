@@ -16,7 +16,7 @@
 <body>
 
     <h1>Draw me a launcher</h1>
-    <p>v0.0.16</p>
+    <p>v0.0.17</p>
     <a href="plan.txt" target="_blank">developpement plan</a>
     <a href="changelog.txt" target="_blank">changelog</a>    <br>
     <button id="readme_button" title="Purpose" type="button">Purpose & Actual Limitation</button>
@@ -69,11 +69,23 @@
     </ul>
     <label>Part selection</label>
     <ul>
-       <li>
+        <li>
+            <label>Select mode : </label>
+            <label for="id_mode_simple"> simple </label><input type="radio" id="part_mode_simple" name="part_mode" value="part_collection_simple" checked="checked">
+            <label for="id_mode_advanced"> advanced </label><input type="radio" id="part_mode_advanced" name="part_mode" value="part_collection_advanced">
+        </li>
+       <li id="part_collection_simple" class="part-collection">
             <label>Part Collection</label>
             <select id="parts" name="parts_collection">
                 <!-- JS generated -->
             </select>
+        </li>
+        <li id="part_collection_advanced" class="part-collection">
+            <label>Select parts</label>
+            <div id="advanced_part_list">
+
+            </div>
+            <!-- JS generated -->
         </li>
     </ul>
     <a id="advanced_button">Advanced (dangerous)</a>
@@ -96,8 +108,8 @@
         </ul>
     </div>
     <hr>
-    <input type="button" class='action_button' value='Stop simulation' id='stop' name='stop'/>
-    <input type="submit" class='action_button' value='Draw me a launcher' id='start' name='start'/>
+    <input type="button" disabled="disabled" class='action_button' value='Stop simulation' id='stop' name='stop'/>
+    <input type="submit" disabled="disabled" class='action_button' value='Draw me a launcher' id='start' name='start'/>
     
 </form>
 

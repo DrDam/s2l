@@ -192,6 +192,7 @@ function MakeUpperStageW(nb) {
                 killMe();
             }
             if (channel === 'wait') {
+                UpperWStackStatus[sub_worker_id] = 'wait';
                 SearchUpperStage(sub_worker_id);
             }
             if (channel === 'result') {
@@ -215,7 +216,6 @@ function SearchUpperStage(sub_worker_id) {
     
     var upperStageDv = RepartitionStack.shift();
     if (upperStageDv === undefined) {
-        UpperWStackStatus[sub_worker_id] = 'wait';
         // Note : case when UpperStack generation not found result or too long and shift to rapidly so empty before upperCalculation ended
         VerifyAutostop();
         return;
@@ -265,7 +265,8 @@ function SearchUnderStage(sub_worker_id) {
     
     var Item = UpperResultStack.shift();
     if (Item === undefined) {
-        RocketWStackStatus[sub_worker_id] = 'wait';
+        // Note : normal case
+        VerifyAutostop();
         return;
     }
 
@@ -328,6 +329,7 @@ function MakeRocketW(nb) {
             }
             if (channel === 'wait') {
                 DEBUG.send(sub_worker_id + ' # send wait');
+                RocketWStackStatus[sub_worker_id] = 'wait';
                 SearchUnderStage(sub_worker_id);
             }
             if (channel === 'result') {
