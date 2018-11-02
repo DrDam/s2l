@@ -269,7 +269,7 @@ var ProcessedParts = {};
             }, 1000);
 
             // If collection not changed
-            if (nbTanks == GeneratedStackSize && GeneratedStackCollection == collection) {
+            if (nbTanks == GeneratedStackSize && GeneratedStackCollection == collection_name) {
                 console.log('FuelTank stacks with ' + nbTanks + ' parts Allready generated (' + collection_name + ')');
                 stackGenerated('fuelTanks');
             } else {
@@ -289,7 +289,7 @@ var ProcessedParts = {};
                     if (channel === 'result') {
                         PartToCalculation.fuelTanksStacks = result.stacks;
                         GeneratedStackSize = nbTanks;
-                        GeneratedStackCollection = collection;
+                        GeneratedStackCollection = collection_name;
 
                         tanksMaker.terminate();
                         tanksMaker = undefined;
