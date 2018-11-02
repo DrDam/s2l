@@ -4,7 +4,7 @@
 v0.0.17
 - Add advanced part selection
 - Optimizations
-- Format
+- add Cost and part number
 
 v0.0.16
 - Refactor tank stack generation
