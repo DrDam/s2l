@@ -42,7 +42,7 @@ function getFuelTankSolution(stageData) {
             };
         }
     }
-    
+
     return (bestOverflow < 999) ? bestSolution : null;
 }
 

@@ -10,8 +10,8 @@ function makeSingleStageRocket() {
     var StageData = clone(Global_data);
     StageData.rocket.bottom = true;
     for (var i in SingleStageWorkers) {
-        SingleStageWorkers[i].postMessage({channel: "init", data: StageData});
-        SingleStageWorkers[i].postMessage({channel: "run"});
+        SingleStageWorkers[i].postMessage({ channel: "init", data: StageData });
+        SingleStageWorkers[i].postMessage({ channel: "run" });
     }
 }
 
@@ -23,7 +23,7 @@ function generateWorkers(type, nb) {
         var w = new Worker('/workers/' + type + ".js");
         var globalId = worker_id + '--' + type + '--' + i;
         //console.log('Generate woker ' + globalId);
-        w.postMessage({channel: "create", id: globalId, fragment_id:i, parts: Parts, debug: Global_data.simu.debug});
+        w.postMessage({ channel: "create", id: globalId, fragment_id: i, parts: Parts, debug: Global_data.simu.debug });
         localWorkers[globalId] = w;
         SingleStageWorkers[globalId] = localWorkers[globalId];
         SingleStageWorkersStatus[globalId] = 'created';
@@ -37,14 +37,14 @@ function generateWorkers(type, nb) {
                 //console.log(result);
                 //console.log('******************');
                 DEBUG.send(worker_id + ' # send to output # ' + hash);
-                self.postMessage({channel: 'result', output: result.output, id: worker_id, data: Global_data, hash: hash});
+                self.postMessage({ channel: 'result', output: result.output, id: worker_id, data: Global_data, hash: hash });
             }
             if (result.channel == 'wait') {
                 SingleStageWorkersStatus[subworker_id] = 'wait';
                 autostop();
             }
             if (result.channel == 'badDesign') {
-                self.postMessage({channel: 'badDesign'});
+                self.postMessage({ channel: 'badDesign' });
             }
             if (result.channel == 'killMe') {
                 SingleStageWorkers[subworker_id] = undefined;

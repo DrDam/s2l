@@ -54,29 +54,29 @@ var ProcessedParts = {};
         });
 
 
-    // Set Sizes
-    Sizes = [
-        { id: '0', label: 'Tiny - 0.625m' },
-        { id: '1', label: 'Small - 1.25m' },
-        { id: '1p5', label: 'Medium - 1.875m' },
-        { id: '2', label: 'Large - 2.5m' },
-        { id: '3', label: 'Extra Large - 3.75m' },
-        { id: '4', label: 'Huge - 5m' },
-        { id: 'mk1', label: 'Mk1 - 5m' },
-        { id: 'mk2', label: 'Mk2' },
-        { id: 'mk3', label: 'Mk3' }
-    ];
-    // Populate CU size select
-    $.each(Sizes, function (i, item) {
-        var data = {
-            value: item.id,
-            text: item.label
-        };
-        if (item.id === '1') {
-            data.selected = 'selected';
-        }
-        $('#sizeCU').append($('<option>', data));
-    });
+        // Set Sizes
+        Sizes = [
+            { id: '0', label: 'Tiny - 0.625m' },
+            { id: '1', label: 'Small - 1.25m' },
+            { id: '1p5', label: 'Medium - 1.875m' },
+            { id: '2', label: 'Large - 2.5m' },
+            { id: '3', label: 'Extra Large - 3.75m' },
+            { id: '4', label: 'Huge - 5m' },
+            { id: 'mk1', label: 'Mk1 - 5m' },
+            { id: 'mk2', label: 'Mk2' },
+            { id: 'mk3', label: 'Mk3' }
+        ];
+        // Populate CU size select
+        $.each(Sizes, function (i, item) {
+            var data = {
+                value: item.id,
+                text: item.label
+            };
+            if (item.id === '1') {
+                data.selected = 'selected';
+            }
+            $('#sizeCU').append($('<option>', data));
+        });
 
 
         /*******************************/
@@ -147,13 +147,13 @@ var ProcessedParts = {};
             // Filtre part
             var part_mode = elems.part_mode.value;
             ProcessedParts = {};
-            if(part_mode == 'part_collection_simple') {
+            if (part_mode == 'part_collection_simple') {
                 collection_name = elems.parts_collection.value;
-                if(collection_name != 'all') {
-                    for(var part_group in Parts) {
+                if (collection_name != 'all') {
+                    for (var part_group in Parts) {
                         ProcessedParts[part_group] = [];
-                        for(var part_id in Parts[part_group]) {
-                            if(getKeys(Parts[part_group][part_id].provider)[0] == collection_name){
+                        for (var part_id in Parts[part_group]) {
+                            if (getKeys(Parts[part_group][part_id].provider)[0] == collection_name) {
                                 ProcessedParts[part_group].push(clone(Parts[part_group][part_id]));
                             }
                         }
@@ -165,20 +165,20 @@ var ProcessedParts = {};
             }
             else {
                 collection_name = 'custom';
-                $.each(elems.partList, function(i, item){
-                    if($(item).prop('checked')) {
+                $.each(elems.partList, function (i, item) {
+                    if ($(item).prop('checked')) {
                         var box = $(this).val().split('--');
-                        if(!collection[box[0]]) {
+                        if (!collection[box[0]]) {
                             collection[box[0]] = {};
                         }
                         collection[box[0]][box[1]] = box[1];
                     }
                 });
-                for(var part_category in Parts) {
+                for (var part_category in Parts) {
                     ProcessedParts[part_category] = [];
-                    for(var key in Parts[part_category]) {
+                    for (var key in Parts[part_category]) {
                         var part = Parts[part_category][key];
-                        if(collection[part_category] && collection[part_category][part.id]){
+                        if (collection[part_category] && collection[part_category][part.id]) {
                             ProcessedParts[partpart_category_group].push(clone(Parts[part_category][key]));
                         }
                     }
@@ -224,7 +224,7 @@ var ProcessedParts = {};
             };
 
             PartToCalculation.adapters = ProcessedParts.adapters;
-            
+
 
             /**********************************/
             /* End Init calculation variables */
@@ -254,7 +254,7 @@ var ProcessedParts = {};
         /**********************/
         /* Running Operations */
         /**********************/
-        
+
         // Make part Stacks (Fuel Tank / Engine couplers)
         function makePartStacks(nbTanks, collection_name, debug) {
             // Init Stack Flag
@@ -277,10 +277,10 @@ var ProcessedParts = {};
                 console.log('Generate FuelTank stacks with ' + nbTanks + ' parts (' + collection_name + ')');
                 var tanksMaker = new Worker("workers/makeFuelTanksStack.js");
                 tanksMaker.postMessage({
-                    channel: 'create', 
-                    parts: ProcessedParts.fuelTanks.concat(ProcessedParts.adapters), 
-                    nbTanks: nbTanks, 
-                    id: 'tankMaker', 
+                    channel: 'create',
+                    parts: ProcessedParts.fuelTanks.concat(ProcessedParts.adapters),
+                    nbTanks: nbTanks,
+                    id: 'tankMaker',
                     debug: debug
                 });
                 tanksMaker.addEventListener('message', function (e) {
@@ -374,11 +374,11 @@ var ProcessedParts = {};
 
             var master_data = clone(computationData);
             master_data.rocket.stages = nbStages;
-            master.postMessage({ 
-                channel: 'create', 
-                parts: PartToCalculation, 
-                id: master_id, 
-                debug: computationData.simu.debug 
+            master.postMessage({
+                channel: 'create',
+                parts: PartToCalculation,
+                id: master_id,
+                debug: computationData.simu.debug
             });
             master.postMessage({ channel: "init", data: master_data });
             master.addEventListener('message', function (e) {

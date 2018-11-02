@@ -10,8 +10,8 @@ var nbTanks = 0;
 // Communication
 self.addEventListener('message', function (e) {
     var inputs = e.data;
-    
-    if(inputs.channel == 'create') {
+
+    if (inputs.channel == 'create') {
         DEBUG.setStatus(inputs.debug.status);
         DEBUG.setStart(inputs.debug.startTime);
         worker_id = inputs.id;
@@ -23,7 +23,7 @@ self.addEventListener('message', function (e) {
     if (e.data.channel == 'run') {
         DEBUG.send(worker_id + ' # run');
         generateStacks();
-        self.postMessage({channel:'result', stacks:Stacks});
+        self.postMessage({ channel: 'result', stacks: Stacks });
         DEBUG.send(worker_id + ' # Finished');
     }
 });
@@ -32,20 +32,20 @@ self.addEventListener('message', function (e) {
 /** Generate Stacks **/
 /********************/
 function generateStacks(topSize, stack) {
-    if(topSize == undefined) {
+    if (topSize == undefined) {
         topSize = null;
     }
-    if(stack == undefined) {
+    if (stack == undefined) {
         stack = {};
     }
 
-    for(var i in Parts) {
+    for (var i in Parts) {
 
         // select part
         var current = Parts[i];
 
         // Manage First Part of Stack
-        if(topSize == null) {
+        if (topSize == null) {
             stack = {};
             stack.parts = [];
             stack.info = {};
@@ -59,15 +59,15 @@ function generateStacks(topSize, stack) {
         }
         else {
             // if other part of stack, check assembly
-            if (topSize !== current.stackable.top) { 
-                continue; 
+            if (topSize !== current.stackable.top) {
+                continue;
             }
         }
 
         // Manage fuelType
-        if(current.ressources != undefined) {
+        if (current.ressources != undefined) {
             // First Stack part with fuel
-            if(stack.info.ressources == undefined) {
+            if (stack.info.ressources == undefined) {
                 stack.info.ressources = getKeys(current.ressources);
             }
             else {
@@ -82,19 +82,19 @@ function generateStacks(topSize, stack) {
 
         // add Part to stack
         var localStack = clone(stack);
-        localStack.parts.push({id: current.id, name: current.name, provider : current.provider});
+        localStack.parts.push({ id: current.id, name: current.name, provider: current.provider });
         //localStack.parts.push(current);
 
         // add mass & provider to stack
         localStack.info.mass.full += current.mass.full;
-        localStack.info.mass.empty += current.mass.empty;    
+        localStack.info.mass.empty += current.mass.empty;
         localStack.info.provider[current.provider] = current.provider;
 
         // push stack
         localStack.info.stackable.bottom = current.stackable.bottom;
         Stacks.push(localStack);
 
-        if(localStack.parts.length < MaxTanks) {
+        if (localStack.parts.length < MaxTanks) {
             generateStacks(current.stackable.bottom, localStack);
         }
     }

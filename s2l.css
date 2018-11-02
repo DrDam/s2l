@@ -1,4 +1,36 @@
 
+/* Form */
+
+.group_wrapper {
+  display: inline-block;
+  width: 49%;
+  vertical-align: top;
+}
+
+/* Part selector*/
+#part_collection_advanced {
+  display: none;
+}
+
+.part-category{
+  text-transform: capitalize
+}
+
+.part-category:hover{
+  cursor: pointer
+}
+
+.part-category::before{
+  content: '-';
+  margin-right:2px;
+  font-weight: bold
+}
+.part-category.closed::before{
+  content:'+';
+}
+
+
+
 /* Table */
 
 #results {

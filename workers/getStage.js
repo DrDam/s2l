@@ -5,18 +5,18 @@ var worker_id;
 var Global_data = {};
 var Parts = {};
 var Global_status = 'run';
-var fragment_id ;
+var fragment_id;
 
 function autostop() {
     var stopped = new Date();
     Global_data = null;
     DEBUG.send(worker_id + ' # wait # ' + round((stopped - startTime) / 1000, 0) + "sec running");
-    self.postMessage({channel: 'wait', id: worker_id});
+    self.postMessage({ channel: 'wait', id: worker_id });
 }
 
 function killMe() {
     DEBUG.send(worker_id + ' # killMe');
-    self.postMessage({channel: 'killMe', id: worker_id});
+    self.postMessage({ channel: 'killMe', id: worker_id });
     Global_data = null;
     close();
 }
@@ -29,13 +29,13 @@ self.addEventListener('message', function (e) {
         DEBUG.send(worker_id + ' # to stop');
         killMe();
     }
-    
-    if(inputs.channel == 'create') {
+
+    if (inputs.channel == 'create') {
         DEBUG.setStatus(inputs.debug.status);
         DEBUG.setStart(inputs.debug.startTime);
         worker_id = inputs.id;
         Parts = inputs.parts;
-        if(inputs.fragment_id != undefined) {
+        if (inputs.fragment_id != undefined) {
             fragment_id = e.data.fragment_id;
         }
         DEBUG.send(worker_id + ' # created');
@@ -57,7 +57,7 @@ self.addEventListener('message', function (e) {
 // Processing functions
 function drawMeARocket() {
     var localengines = [];
-    if(fragment_id === undefined) {
+    if (fragment_id === undefined) {
         localengines = Parts.engines;
     }
     else {
@@ -67,24 +67,24 @@ function drawMeARocket() {
     }
 
     giveMeASingleStage(localengines);
-    setTimeout(function(){ autostop(); }, 10);
+    setTimeout(function () { autostop(); }, 10);
 }
 
 function giveMeASingleStage(availableEngines) {
-    
+
     var targetDv = clone(Global_data.rocket.dv);
     var twr = clone(Global_data.rocket.twr);
     var SOI = clone(Global_data.SOI.kerbin);
 
     for (var i in availableEngines) {
-        
+
         var engine = availableEngines[i];
 
-        if(Global_data.rocket.bottom !== true && engine.stackable.bottom == false) {
-            self.postMessage({channel: 'badDesign'});
+        if (Global_data.rocket.bottom !== true && engine.stackable.bottom == false) {
+            self.postMessage({ channel: 'badDesign' });
             continue;
         }
-        
+
         if (Global_status == 'stop') {
             return null;
         }
@@ -96,11 +96,11 @@ function giveMeASingleStage(availableEngines) {
         var ISP = curveData.ISP;
         var Thrust = curveData.Thrust;
         var cu = clone(Global_data.cu);
-        
+
         // Add decoupler mass
         var decoupler = {};
         decoupler = getDecoupler(cu.size);
-        if(decoupler === null) {
+        if (decoupler === null) {
             decoupler = {};
             decoupler.mass = {};
             decoupler.mass.full = 0;
@@ -109,13 +109,13 @@ function giveMeASingleStage(availableEngines) {
         cu.mass = cu.mass + decoupler.mass.full;
 
         // Add commandModule if needed
-        var command = {mass: 0, stack:[]};
+        var command = { mass: 0, stack: [] };
         cu.mass = cu.mass + command.mass;
 
         // Prepare Masses values
         var MassEngineFull = engine.mass.full;
         var MassEngineDry = engine.mass.empty;
-        var MstageDry  = cu.mass + decoupler.mass.full + command.mass + MassEngineDry;
+        var MstageDry = cu.mass + decoupler.mass.full + command.mass + MassEngineDry;
         var MstageFull = cu.mass + decoupler.mass.full + command.mass + MassEngineFull;
 
         // calculate Fuel mass for the needed for Dv
@@ -124,39 +124,39 @@ function giveMeASingleStage(availableEngines) {
         // Calcul of Mcarbu => OK ! Verified 10times
 
         var no_tank = false;
-        
+
         // If Engine contain fuel ( Booster or TwinBoar )
         var EngineFuelMass = 0;
         if (MassEngineDry < MassEngineFull) {
             EngineFuelMass = MassEngineFull - MassEngineDry;
             Mcarbu -= EngineFuelMass;
             // If onboard fuel are suffisant
-            if(Mcarbu < 0) {
+            if (Mcarbu < 0) {
                 Mcarbu = 0;
                 no_tank = true;
             }
         }
-        
+
         // Manage solid Boosters
         if (engine.caract.type == 'SolidBooster') {
             if (Mcarbu > 0) {
                 //console.log('=>  OUT not enought powder');
                 // not enough solid fuel in engine 
-                self.postMessage({channel: 'badDesign'});
+                self.postMessage({ channel: 'badDesign' });
                 continue;
             } else {
                 // Booster get enougth dv
                 no_tank = true;
             }
         }
-        
+
         // Get Out engines where Mcarbu outrise twr
         if (!testTwr(Thrust, MstageFull + Mcarbu, twr, SOI.Go)) {
             //console.log('=>  OUT not enought TWR (' + Thrust / (MstageFull + Mcarbu) / SOI.Go + ')' );
-            self.postMessage({channel: 'badDesign'});
+            self.postMessage({ channel: 'badDesign' });
             continue;
         }
-        
+
         var TankSolution = {};
         if (no_tank === false) {
             // Get Tank configuration
@@ -178,7 +178,7 @@ function giveMeASingleStage(availableEngines) {
             TankSolution = getFuelTankSolution(stageDataForTank);
             if (TankSolution === null) {
                 //console.log('=>  OUT not tank solution' );
-                self.postMessage({channel: 'badDesign'});
+                self.postMessage({ channel: 'badDesign' });
                 continue;
             }
             else {
@@ -204,7 +204,7 @@ function giveMeASingleStage(availableEngines) {
         var TwrDry = Thrust / MstageDry / SOI.Go;
         var burnDuration = stageFuelMass * ISP * SOI.Go / Thrust;
         var Dv = ISP * SOI.Go * Math.log(MstageFull / MstageDry);
-        
+
         var stage = {
             decoupler: decoupler.name,
             commandModule: command.stack,
@@ -230,7 +230,7 @@ function giveMeASingleStage(availableEngines) {
             nbStages: 1,
             size: engine.stackable.bottom
         };
-        self.postMessage({channel: 'result', output: output, id: worker_id, data:Global_data});
+        self.postMessage({ channel: 'result', output: output, id: worker_id, data: Global_data });
     }
 }
 
@@ -258,10 +258,10 @@ function getEngineCurveDateForAtm(engineCaracts, AtmPressur) {
 function testTwr(Thrust, Mass, target, Go) {
     var Twr = Thrust / Mass / Go;
 
-    if(!target.max) {
+    if (!target.max) {
         return Twr > target.min;
     }
     else {
-        return(Twr > target.min &&  Twr < target.max);
+        return (Twr > target.min && Twr < target.max);
     }
 }

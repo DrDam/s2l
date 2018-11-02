@@ -58,16 +58,16 @@ function autostop() {
     cleanData();
     var stopped = new Date();
     DEBUG.send(worker_id + ' # wait # ' + round((stopped - startTime) / 1000, 0) + "sec running");
-    self.postMessage({channel: 'wait', id: worker_id});
+    self.postMessage({ channel: 'wait', id: worker_id });
 }
 
 // Delete me
 function killMe() {
     if (Object.values(SingleStageWorkersStatus).join('') === '' &&
-            Object.values(UpperWStackStatus).join('') === '' &&
-            Object.values(RocketWStackStatus).join('') === '') {
+        Object.values(UpperWStackStatus).join('') === '' &&
+        Object.values(RocketWStackStatus).join('') === '') {
         DEBUG.send(worker_id + ' # killMe');
-        self.postMessage({channel: 'killMe', id: worker_id});
+        self.postMessage({ channel: 'killMe', id: worker_id });
         cleanData();
         Parts = {};
         close();
@@ -77,18 +77,18 @@ function killMe() {
 // Stop All Children
 function SendStopToAllChildren() {
     for (var i in UpperWStack) {
-        if(UpperWStack[i] !== undefined) {
-            UpperWStack[i].postMessage({channel: "stop"});
+        if (UpperWStack[i] !== undefined) {
+            UpperWStack[i].postMessage({ channel: "stop" });
         }
     }
     for (var j in RocketWStack) {
-        if(RocketWStack[j] !== undefined) {
-            RocketWStack[j].postMessage({channel: "stop"});
+        if (RocketWStack[j] !== undefined) {
+            RocketWStack[j].postMessage({ channel: "stop" });
         }
     }
     for (var k in SingleStageWorkers) {
-        if(SingleStageWorkers[k] !== undefined) {
-            SingleStageWorkers[k].postMessage({channel: "stop"});
+        if (SingleStageWorkers[k] !== undefined) {
+            SingleStageWorkers[k].postMessage({ channel: "stop" });
         }
     }
 }
@@ -158,7 +158,7 @@ function makeMultipleStageRocket() {
     }
 
     // Generate RockerW
-    if (UpperWStackCreated === false  ) {
+    if (UpperWStackCreated === false) {
         UpperWStackCreated = true;
         MakeUpperStageW(Global_data.simu.nbWorker);
     }
@@ -179,12 +179,12 @@ function MakeUpperStageW(nb) {
         var w = new Worker('getStage.js');
         //DEBUG('Generate woker ' + globalId);
         UpperWStack[worker_uid] = w;
-        w.postMessage({channel: 'create', id: worker_uid, parts: Parts, debug: Global_data.simu.debug});
+        w.postMessage({ channel: 'create', id: worker_uid, parts: Parts, debug: Global_data.simu.debug });
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
             var sub_worker_id = e.data.id;
             if (channel == 'badDesign') {
-                self.postMessage({channel: 'badDesign'});
+                self.postMessage({ channel: 'badDesign' });
             }
             if (channel === 'killMe') {
                 UpperWStack[sub_worker_id] = undefined;
@@ -209,11 +209,11 @@ function MakeUpperStageW(nb) {
 
 // Send data to UpperStage Processing
 function SearchUpperStage(sub_worker_id) {
-    if(Global_status === 'stop') {
+    if (Global_status === 'stop') {
         SendStopToAllChildren();
         return;
     }
-    
+
     var upperStageDv = RepartitionStack.shift();
     if (upperStageDv === undefined) {
         // Note : case when UpperStack generation not found result or too long and shift to rapidly so empty before upperCalculation ended
@@ -230,18 +230,18 @@ function SearchUpperStage(sub_worker_id) {
     UpperData.rocket.stages = 1;
 
     // Send Data to UpperStage
-    UpperWStack[sub_worker_id].postMessage({channel: 'init', data: UpperData});
+    UpperWStack[sub_worker_id].postMessage({ channel: 'init', data: UpperData });
     UpperWStackStatus[sub_worker_id] = 'run';
-    UpperWStack[sub_worker_id].postMessage({channel: 'run'});
+    UpperWStack[sub_worker_id].postMessage({ channel: 'run' });
 }
 
 
 
 // When a UpperStage has push data to UpperStack
 self.addEventListener('UpperStackPush', function () {
-    
-    DEBUG.send(worker_id +' # UpperResultStack.length # ' + UpperResultStack.length);
-    
+
+    DEBUG.send(worker_id + ' # UpperResultStack.length # ' + UpperResultStack.length);
+
     if (RocketWStackCreated === false) {
         RocketWStackCreated = true;
         MakeRocketW(Global_data.simu.nbWorker);
@@ -258,11 +258,11 @@ self.addEventListener('UpperStackPush', function () {
 
 // Search Under Stage rocessing
 function SearchUnderStage(sub_worker_id) {
-    if(Global_status === 'stop') {
+    if (Global_status === 'stop') {
         SendStopToAllChildren();
         return;
     }
-    
+
     var Item = UpperResultStack.shift();
     if (Item === undefined) {
         // Note : normal case
@@ -279,7 +279,7 @@ function SearchUnderStage(sub_worker_id) {
     NextData.cu.mass = Item.output.totalMass;
     NextData.cu.size = Item.output.size;
 
-    if(!Item.data.Upper) {
+    if (!Item.data.Upper) {
         NextData.Upper = Item.output;
     }
     else {
@@ -288,14 +288,14 @@ function SearchUnderStage(sub_worker_id) {
 
     Item = undefined;
 
-    RocketWStack[sub_worker_id].postMessage({channel: 'init', data: NextData});
+    RocketWStack[sub_worker_id].postMessage({ channel: 'init', data: NextData });
     RocketWStackStatus[sub_worker_id] = 'run';
-    RocketWStack[sub_worker_id].postMessage({channel: 'run'});
+    RocketWStack[sub_worker_id].postMessage({ channel: 'run' });
 }
 
 // Signal end of all processing
 self.addEventListener('UpperStackIsEmpty', function () {
-    if(Global_status === 'stop') {
+    if (Global_status === 'stop') {
         SendStopToAllChildren();
         return;
     }
@@ -314,12 +314,12 @@ function MakeRocketW(nb) {
         var w = new Worker('getRocket.js');
         //DEBUG('Generate woker ' + globalId);
         RocketWStack[worker_uid] = w;
-        w.postMessage({channel: 'create', id: worker_uid, parts: Parts, debug: Global_data.simu.debug});
+        w.postMessage({ channel: 'create', id: worker_uid, parts: Parts, debug: Global_data.simu.debug });
         w.addEventListener('message', function (e) {
             var channel = e.data.channel;
             var sub_worker_id = e.data.id;
             if (channel == 'badDesign') {
-                self.postMessage({channel: 'badDesign'});
+                self.postMessage({ channel: 'badDesign' });
             }
             if (channel === 'killMe') {
                 DEBUG.send(sub_worker_id + ' # send killMe');
@@ -337,20 +337,20 @@ function MakeRocketW(nb) {
                 var result = e.data;
                 var output = result.output;
                 var outToParent = {};
-                
-                if(result.data.Upper.burn) {
+
+                if (result.data.Upper.burn) {
                     outToParent = addStages(result.data.Upper, output);
                     result.data.Upper = {};
                 }
                 else {
                     outToParent = output;
                 }
-                
+
                 // Note : outToParent.size are equal to false when engine are not "bottom stackable"
-                
-                var hash = JSON.stringify(outToParent).hashCode() ;
+
+                var hash = JSON.stringify(outToParent).hashCode();
                 DEBUG.send(worker_id + ' # send to output # ' + hash);
-                self.postMessage({channel: 'result', output: outToParent, id: worker_id, data: result.data, hash:hash});
+                self.postMessage({ channel: 'result', output: outToParent, id: worker_id, data: result.data, hash: hash });
             }
         });
         i++;
@@ -359,7 +359,7 @@ function MakeRocketW(nb) {
 
 // Stack stages
 function addStages(stack, stage) {
-    
+
     var newStack = {};
     newStack.burn = stack.burn + stage.burn;
     newStack.nbStages = stack.nbStages + stage.nbStages;
@@ -367,14 +367,14 @@ function addStages(stack, stage) {
     newStack.stageDv = stack.stageDv + stage.stageDv;
     newStack.totalMass = stack.totalMass + stage.totalMass;
     newStack.stages = [];
-    
+
     for (var i in stack.stages) {
         newStack.stages.push(stack.stages[i]);
     }
-   for (var j in stage.stages) {
+    for (var j in stage.stages) {
         newStack.stages.push(stage.stages[j]);
     }
-    
+
     return newStack;
 }
 
@@ -387,9 +387,8 @@ function VerifyAutostop() {
     var nbRunning = findAllRunningWorker();
 
     if ((RepartitionStack.length === 0 &&
-            UpperResultStack.length === 0 &&
-            nbRunning === 0) || Global_status === 'stop')
-    {
+        UpperResultStack.length === 0 &&
+        nbRunning === 0) || Global_status === 'stop') {
         // Normal Stopping
         autostop();
     }
