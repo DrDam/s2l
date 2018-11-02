@@ -1,3 +1,7 @@
+body {
+  width: 95%;
+  margin: auto;
+}
 
 /* Form */
 
@@ -33,13 +37,7 @@
 
 
 /* Table */
-#result_wrapper{
-  width: 100%
-}
-
 #results {
-  width: 95%;
-  margin: auto;
   margin-top: 10px;
   display:none
 }
