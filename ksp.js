@@ -247,6 +247,28 @@ var ProcessedParts = {};
             // Which launch calculation when finished
             makePartStacks(simu.maxTanks, collection_name, simu.debug);
 
+            // Show table
+            $('html, body').animate({
+                scrollTop: $("#results").offset().top
+            }, 1000);
+
+            var message = "Contacting Sergeï Kerolev for engines ( " + collection_name + ').';
+            $('#message').html(message);
+
+            // Generate Engine Stacks
+            PartToCalculation.engines = generateEnginesStacks(ProcessedParts.engines, ProcessedParts.couplers);
+
+            message = "Contacting Werner Von Kerman for tanks stack with " + nbTanks + " parts (" + collection_name + ').';
+            $('#message').html(message);
+
+            // Generate Tanks Stacks
+            PartToCalculation.fuelTanksStacks = generateTanksStacks(ProcessedParts.fuelTanks, ProcessedParts.adapters, nbTanks);
+
+            console.log('Search Rockets');
+            // Launch workers !
+            searchRockets(1);
+            $('#message').html("Recruiting Kerbals Engineer");
+
             // Prevent default
             return false;
         });
@@ -254,119 +276,6 @@ var ProcessedParts = {};
         /**********************/
         /* Running Operations */
         /**********************/
-
-        // Make part Stacks (Fuel Tank / Engine couplers)
-        function makePartStacks(nbTanks, collection_name, debug) {
-            // Init Stack Flag
-            stacksGenerated = [];
-
-            // Generate Engine Stacks (no need workers)
-            generateEnginesStacks();
-
-            // Show table
-            $('html, body').animate({
-                scrollTop: $("#results").offset().top
-            }, 1000);
-
-            // If collection not changed
-            if (nbTanks == GeneratedStackSize && GeneratedStackCollection == collection_name) {
-                console.log('FuelTank stacks with ' + nbTanks + ' parts Allready generated (' + collection_name + ')');
-                stackGenerated('fuelTanks');
-            } else {
-                // Need to rebuild stacks
-                console.log('Generate FuelTank stacks with ' + nbTanks + ' parts (' + collection_name + ')');
-                var tanksMaker = new Worker("workers/makeFuelTanksStack.js");
-                tanksMaker.postMessage({
-                    channel: 'create',
-                    parts: ProcessedParts.fuelTanks.concat(ProcessedParts.adapters),
-                    nbTanks: nbTanks,
-                    id: 'tankMaker',
-                    debug: debug
-                });
-                tanksMaker.addEventListener('message', function (e) {
-                    var result = e.data;
-                    var channel = result.channel;
-                    if (channel === 'result') {
-                        PartToCalculation.fuelTanksStacks = result.stacks;
-                        GeneratedStackSize = nbTanks;
-                        GeneratedStackCollection = collection_name;
-
-                        tanksMaker.terminate();
-                        tanksMaker = undefined;
-                        stackGenerated('fuelTanks');
-                    }
-                });
-                var message = "Contacting Werner Von Kerman for tanks stack with " + nbTanks + " parts (" + collection_name + ').';
-                $('#message').html(message);
-                tanksMaker.postMessage({ channel: "run" });
-            }
-        }
-
-        // Generate Engine Stacks
-        PartToCalculation.engines = [];
-        function generateEnginesStacks() {
-
-            for (var engine_id in ProcessedParts.engines) {
-
-                var engine = ProcessedParts.engines[engine_id];
-                engine.nb = 1;
-                // Add Engine
-                PartToCalculation.engines.push(clone(engine));
-
-                // Try put engine on a coupler
-                for (var coupler_id in ProcessedParts.couplers) {
-                    var coupler = ProcessedParts.couplers[coupler_id];
-
-
-                    // only If Engine mount on coupler
-                    if (engine.stackable.top != coupler.stackable.bottom) {
-                        continue;
-                    }
-
-                    // Create new Engine
-                    var nb_engines = coupler.stackable.bottom_number;
-                    var new_engine = clone(engine);
-                    new_engine.id = coupler.id + '_' + nb_engines + '_' + engine.id;
-                    new_engine.mass.full = coupler.mass.full + nb_engines * engine.mass.full;
-                    new_engine.mass.empty = coupler.mass.empty + nb_engines * engine.mass.empty;
-                    new_engine.cost = coupler.cost + nb_engines * engine.cost;
-                    new_engine.name = coupler.name + ' + ' + nb_engines + 'x' + engine.name;
-                    new_engine.caract.MaxThrust = nb_engines * engine.caract.MaxThrust;
-                    for (var curve_id in new_engine.caract.curve) {
-                        new_engine.caract.curve[curve_id].Thrust = nb_engines * engine.caract.curve[curve_id].Thrust;
-                    }
-                    new_engine.stackable.bottom = false;
-                    new_engine.cost = coupler.cost + nb_engines * engine.cost;
-                    for (var fuel_type in new_engine.caract.conso.proportions) {
-                        new_engine.caract.conso.proportions[fuel_type] = nb_engines * engine.caract.conso.proportions[fuel_type];
-                    }
-                    new_engine.provider[coupler.provider] = coupler.provider;
-                    new_engine.nb = nb_engines + 1;
-                    // push new Engine
-                    PartToCalculation.engines.push(clone(new_engine));
-                }
-            }
-            stackGenerated('engines');
-        }
-
-        // Control if all stacks are generated
-        var stacksGenerated = [];
-        function stackGenerated(stack_name) {
-            stacksGenerated.push(stack_name);
-            if (stacksGenerated.length == 2) {
-                // if ok, starting rocket creation
-                makeRockets();
-            }
-        }
-
-        // Launch making rockets
-        function makeRockets() {
-            console.log('Search Rockets');
-            // Launch workers !
-            searchRockets(1);
-
-            $('#message').html("Recruiting Kerbals Engineer");
-        }
 
         // Search all rockets
         function searchRockets(nbStages) {
