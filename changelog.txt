@@ -1,6 +1,9 @@
 #############
 # Changelog #
 #############
+v0.2.0
+- Change all construction logic : Pass from a "repartition mode" for a "test all mode"
+
 v0.0.17
 - Add advanced part selection
 - Optimizations
